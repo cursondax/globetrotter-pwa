@@ -1,0 +1,4933 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="GlobeTrotter SQL - Dein intelligenter Reisebegleiter. Offline-fähig mit OneDrive-Archiv." />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GlobeTrotter" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GlobeTrotter SQL" />
+  <meta property="og:description" content="Intelligenter Reisebegleiter mit Offline-First Architektur" />
+  <meta property="og:type" content="website" />
+
+  <title>GlobeTrotter SQL</title>
+
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <!-- Leaflet.js fuer interaktive Karten -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+  <!-- Google Fonts: Cormorant Garamond (Display) + DM Sans (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS & CSS-VARIABLEN
+       Palette: Tiefes Dunkelblau / Nacht-Schwarz / Gold-Akzent
+    ============================================================ */
+    :root {
+      /* Farben */
+      --c-bg:          #08080e;
+      --c-surface:     #0f0f1a;
+      --c-surface-2:   #16162a;
+      --c-surface-3:   #1e1e35;
+      --c-border:      rgba(255, 255, 255, 0.07);
+      --c-border-soft: rgba(255, 255, 255, 0.04);
+
+      --c-gold:        #c9a84c;
+      --c-gold-light:  #e8c97a;
+      --c-gold-dim:    rgba(201, 168, 76, 0.15);
+
+      --c-text:        #e8e8f0;
+      --c-text-muted:  #8080a0;
+      --c-text-faint:  #3a3a5a;
+
+      --c-accent-blue: #3a6fd8;
+      --c-accent-teal: #2ab8a0;
+      --c-accent-rose: #d84a6f;
+
+      --c-online:  #2ab87a;
+      --c-offline: #d88030;
+
+      /* Typografie */
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+
+      --fs-xs:   0.6875rem;  /* 11px */
+      --fs-sm:   0.8125rem;  /* 13px */
+      --fs-base: 0.9375rem;  /* 15px */
+      --fs-md:   1.0625rem;  /* 17px */
+      --fs-lg:   1.25rem;    /* 20px */
+      --fs-xl:   1.5rem;     /* 24px */
+      --fs-2xl:  2rem;       /* 32px */
+      --fs-3xl:  2.75rem;    /* 44px */
+      --fs-4xl:  3.5rem;     /* 56px */
+
+      --fw-light:  300;
+      --fw-normal: 400;
+      --fw-medium: 500;
+
+      /* Abstände */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+
+      /* Radii */
+      --r-sm:  6px;
+      --r-md:  12px;
+      --r-lg:  18px;
+      --r-xl:  24px;
+      --r-full: 9999px;
+
+      /* Schatten */
+      --shadow-sm:  0 1px 4px rgba(0,0,0,0.4);
+      --shadow-md:  0 4px 20px rgba(0,0,0,0.5);
+      --shadow-lg:  0 12px 48px rgba(0,0,0,0.6);
+      --shadow-gold: 0 0 32px rgba(201, 168, 76, 0.12);
+
+      /* Uebergaenge */
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+      --t-fast:   120ms;
+      --t-normal: 240ms;
+      --t-slow:   400ms;
+
+      /* Layout */
+      --nav-height: 60px;
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left:   env(safe-area-inset-left, 0px);
+      --safe-right:  env(safe-area-inset-right, 0px);
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: var(--fs-base);
+      font-weight: var(--fw-normal);
+      line-height: 1.6;
+      color: var(--c-text);
+      background: var(--c-bg);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============================================================
+       VIEW TRANSITIONS API
+    ============================================================ */
+    @view-transition {
+      navigation: auto;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 300ms;
+      animation-timing-function: var(--ease-out-expo);
+    }
+
+    ::view-transition-old(root) {
+      animation-name: vt-slide-out;
+    }
+
+    ::view-transition-new(root) {
+      animation-name: vt-slide-in;
+    }
+
+    @keyframes vt-slide-out {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-16px); }
+    }
+
+    @keyframes vt-slide-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       HINTERGRUND-TEXTUR
+    ============================================================ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(58, 111, 216, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(42, 184, 160, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Feines Rauschen / Grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============================================================
+       APP LAYOUT
+    ============================================================ */
+    #app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(var(--nav-height) + var(--safe-bottom));
+    }
+
+    /* ============================================================
+       TOP BAR
+    ============================================================ */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      padding-top: calc(var(--space-4) + var(--safe-top));
+      background: rgba(8, 8, 14, 0.85);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--c-border);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-2);
+      text-decoration: none;
+    }
+
+    .topbar-logo {
+      font-family: var(--font-display);
+      font-size: var(--fs-xl);
+      font-weight: var(--fw-light);
+      color: var(--c-gold);
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .topbar-sub {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      color: var(--c-text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    /* Online/Offline-Indikator */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--r-full);
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: all var(--t-normal) var(--ease-in-out);
+    }
+
+    .status-pill__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--c-offline);
+      transition: background var(--t-normal);
+    }
+
+    .status-pill.is-online .status-pill__dot {
+      background: var(--c-online);
+      box-shadow: 0 0 8px var(--c-online);
+    }
+
+    .status-pill.is-online .status-pill__label { color: var(--c-online); }
+    .status-pill:not(.is-online) .status-pill__label { color: var(--c-offline); }
+
+    /* Icon-Button */
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--c-border);
+      background: var(--c-surface);
+      color: var(--c-text-muted);
+      cursor: pointer;
+      transition: all var(--t-fast) var(--ease-in-out);
+    }
+
+    .icon-btn:hover {
+      background: var(--c-surface-2);
+      color: var(--c-text);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.94);
+    }
+
+    /* ============================================================
+       HAUPT-INHALT
+    ============================================================ */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
+    }
+
+    /* Seiten / Views */
+    .view {
+      display: none;
+      min-height: calc(100dvh - var(--nav-height) - 60px);
+      padding: var(--space-6) var(--space-5);
+      animation: view-enter var(--t-slow) var(--ease-out-expo) forwards;
+    }
+
+    .view.is-active {
+      display: block;
+    }
+
+    @keyframes view-enter {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       BOTTOM NAVIGATION
+    ============================================================ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      height: var(--nav-height);
+      padding-bottom: var(--safe-bottom);
+      background: rgba(10, 10, 18, 0.92);
+      backdrop-filter: blur(24px) saturate(1.6);
+      -webkit-backdrop-filter: blur(24px) saturate(1.6);
+      border-top: 1px solid var(--c-border);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: var(--space-2) 0;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--c-text-faint);
+      transition: color var(--t-fast) var(--ease-in-out);
+      position: relative;
+    }
+
+    .nav-item:active {
+      transform: scale(0.9);
+    }
+
+    .nav-item.is-active {
+      color: var(--c-gold);
+    }
+
+    .nav-item__icon {
+      width: 22px;
+      height: 22px;
+      transition: transform var(--t-normal) var(--ease-out-expo);
+    }
+
+    .nav-item.is-active .nav-item__icon {
+      transform: translateY(-2px);
+    }
+
+    .nav-item__label {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Aktiver Nav-Indikator */
+    .nav-item.is-active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 2px;
+      border-radius: 0 0 var(--r-full) var(--r-full);
+      background: var(--c-gold);
+      box-shadow: 0 0 12px var(--c-gold);
+    }
+
+    /* ============================================================
+       VIEW: AKTUELLE REISE
+    ============================================================ */
+    .trip-hero {
+      margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-5));
+      margin-bottom: var(--space-6);
+      padding: var(--space-10) var(--space-5);
+      background: linear-gradient(135deg,
+        rgba(58, 111, 216, 0.12) 0%,
+        rgba(42, 184, 160, 0.08) 100%
+      );
+      border-bottom: 1px solid var(--c-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .trip-hero::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 40%;
+      background: radial-gradient(ellipse at right center,
+        rgba(201, 168, 76, 0.06) 0%,
+        transparent 70%
+      );
+    }
+
+    .trip-hero__kicker {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      margin-bottom: var(--space-2);
+    }
+
+    .trip-hero__title {
+      font-family: var(--font-display);
+      font-size: var(--fs-3xl);
+      font-weight: var(--fw-light);
+      line-height: 1.1;
+      color: var(--c-text);
+      margin-bottom: var(--space-3);
+    }
+
+    .trip-hero__meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .trip-hero__meta-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: var(--fs-sm);
+      color: var(--c-text-muted);
+    }
+
+    .trip-hero__meta-item svg {
+      width: 14px;
+      height: 14px;
+      color: var(--c-gold-light);
+      flex-shrink: 0;
+    }
+
+    /* Dashboard-Kacheln */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+
+    .dashboard-card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: var(--space-5);
+      cursor: pointer;
+      transition: all var(--t-normal) var(--ease-out-expo);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dashboard-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(255,255,255,0.03) 0%,
+        transparent 60%
+      );
+      border-radius: inherit;
+    }
+
+    .dashboard-card:hover {
+      background: var(--c-surface-2);
+      border-color: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .dashboard-card:active {
+      transform: scale(0.97);
+    }
+
+    .dashboard-card--wide {
+      grid-column: span 2;
+    }
+
+    .dashboard-card__icon {
+      width: 32px;
+      height: 32px;
+      margin-bottom: var(--space-3);
+      color: var(--c-gold);
+    }
+
+    .dashboard-card__value {
+      font-family: var(--font-display);
+      font-size: var(--fs-2xl);
+      font-weight: var(--fw-light);
+      color: var(--c-text);
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+
+    .dashboard-card__label {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--c-text-muted);
+    }
+
+    /* Fortschrittsbalken */
+    .progress-bar {
+      height: 3px;
+      background: var(--c-surface-3);
+      border-radius: var(--r-full);
+      margin-top: var(--space-3);
+      overflow: hidden;
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      border-radius: var(--r-full);
+      background: linear-gradient(90deg, var(--c-gold), var(--c-gold-light));
+      transition: width 0.8s var(--ease-out-expo);
+    }
+
+    /* ============================================================
+       VIEW: CHECKLISTE
+    ============================================================ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-5);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: var(--fs-2xl);
+      font-weight: var(--fw-light);
+      color: var(--c-text);
+      line-height: 1.2;
+    }
+
+    .section-badge {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      color: var(--c-text-muted);
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-full);
+      padding: var(--space-1) var(--space-3);
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .checklist-category {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--c-text-muted);
+      padding: var(--space-5) 0 var(--space-2);
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      cursor: pointer;
+      transition: all var(--t-fast) var(--ease-in-out);
+      user-select: none;
+    }
+
+    .checklist-item:hover {
+      background: var(--c-surface-2);
+    }
+
+    .checklist-item:active {
+      transform: scale(0.98);
+    }
+
+    .checklist-item.is-done {
+      opacity: 0.5;
+    }
+
+    .checklist-item.is-done .checklist-item__text {
+      text-decoration: line-through;
+      color: var(--c-text-muted);
+    }
+
+    .checklist-checkbox {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: var(--r-sm);
+      border: 1.5px solid var(--c-border);
+      background: var(--c-surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--t-normal) var(--ease-out-expo);
+    }
+
+    .checklist-item.is-done .checklist-checkbox {
+      background: var(--c-gold);
+      border-color: var(--c-gold);
+    }
+
+    .checklist-checkbox svg {
+      width: 12px;
+      height: 12px;
+      color: var(--c-bg);
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all var(--t-normal) var(--ease-out-expo);
+    }
+
+    .checklist-item.is-done .checklist-checkbox svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .checklist-item__text {
+      flex: 1;
+      font-size: var(--fs-base);
+      color: var(--c-text);
+      transition: color var(--t-normal);
+    }
+
+
+    /* ============================================================
+       CHECKLISTE: ERWEITERTE STYLES
+    ============================================================ */
+    .checklist-hero {
+      display: flex; align-items: center;
+      gap: var(--space-6); padding: var(--space-6) 0 var(--space-8);
+    }
+    .progress-ring { flex-shrink:0; position:relative; width:80px; height:80px; }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring__track { fill:none; stroke:var(--c-surface-3); stroke-width:4; }
+    .progress-ring__fill {
+      fill:none; stroke:var(--c-gold); stroke-width:4; stroke-linecap:round;
+      transition: stroke-dashoffset 0.8s var(--ease-out-expo);
+    }
+    .progress-ring__label {
+      position:absolute; inset:0; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      font-family:var(--font-display); font-size:var(--fs-xl);
+      font-weight:var(--fw-light); color:var(--c-gold); line-height:1;
+    }
+    .progress-ring__sub {
+      font-family:var(--font-body); font-size:var(--fs-xs);
+      color:var(--c-text-muted); margin-top:2px;
+    }
+    .checklist-hero__info { flex:1; }
+    .checklist-hero__title {
+      font-family:var(--font-display); font-size:var(--fs-2xl);
+      font-weight:var(--fw-light); color:var(--c-text); margin-bottom:var(--space-1);
+    }
+    .checklist-hero__sub {
+      font-size:var(--fs-sm); color:var(--c-text-muted); margin-bottom:var(--space-4);
+    }
+    .filter-tabs {
+      display:flex; gap:var(--space-2); margin-bottom:var(--space-5);
+      overflow-x:auto; scrollbar-width:none; padding-bottom:2px;
+    }
+    .filter-tabs::-webkit-scrollbar { display:none; }
+    .filter-tab {
+      flex-shrink:0; padding:var(--space-2) var(--space-4);
+      border-radius:var(--r-full); border:1px solid var(--c-border);
+      background:transparent; font-family:var(--font-body); font-size:var(--fs-xs);
+      font-weight:var(--fw-medium); letter-spacing:0.06em; text-transform:uppercase;
+      color:var(--c-text-muted); cursor:pointer;
+      transition: all var(--t-fast) var(--ease-in-out); white-space:nowrap;
+    }
+    .filter-tab:hover { background:var(--c-surface); color:var(--c-text); }
+    .filter-tab.is-active {
+      background:var(--c-gold-dim); border-color:rgba(201,168,76,0.3); color:var(--c-gold);
+    }
+    .checklist-category-header {
+      display:flex; align-items:center; gap:var(--space-3);
+      padding:var(--space-5) 0 var(--space-3);
+    }
+    .checklist-category-icon { font-size:16px; line-height:1; }
+    .checklist-category-name {
+      font-size:var(--fs-xs); font-weight:var(--fw-medium);
+      letter-spacing:0.14em; text-transform:uppercase;
+      color:var(--c-text-muted); flex:1;
+    }
+    .checklist-category-count { font-size:var(--fs-xs); color:var(--c-text-faint); }
+    .checklist-item { position:relative; overflow:hidden; touch-action:pan-y; }
+    .checklist-item::after {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(90deg,rgba(201,168,76,0.05) 0%,transparent 60%);
+      opacity:0; transition:opacity var(--t-normal); pointer-events:none;
+    }
+    .checklist-item.is-done::after { opacity:1; }
+    @keyframes item-check-flash {
+      0%   { background:var(--c-surface); }
+      30%  { background:rgba(201,168,76,0.12); }
+      100% { background:var(--c-surface); }
+    }
+    .checklist-item.just-checked { animation:item-check-flash 0.4s var(--ease-out-expo); }
+    .checklist-item__delete-bg {
+      position:absolute; right:0; top:0; bottom:0; width:80px;
+      background:linear-gradient(90deg,transparent,rgba(216,74,111,0.18));
+      display:flex; align-items:center; justify-content:flex-end;
+      padding-right:var(--space-5); opacity:0;
+      transition:opacity var(--t-fast); pointer-events:none;
+    }
+    .checklist-item__delete-bg svg { color:var(--c-accent-rose); width:18px; height:18px; }
+    .checklist-item__body { flex:1; min-width:0; }
+    .checklist-item__note {
+      font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:2px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .priority-dot {
+      width:6px; height:6px; border-radius:50%; flex-shrink:0;
+      transition:opacity var(--t-normal);
+    }
+    .priority-dot--high   { background:var(--c-accent-rose); }
+    .priority-dot--medium { background:var(--c-gold); }
+    .priority-dot--low    { background:var(--c-text-faint); }
+    .checklist-item.is-done .priority-dot { opacity:0; }
+    .add-item-bar {
+      position:sticky; bottom:0;
+      padding:var(--space-4) 0 var(--space-2);
+      background:linear-gradient(to top,var(--c-bg) 60%,transparent);
+      margin:0 calc(-1 * var(--space-5));
+      padding-left:var(--space-5); padding-right:var(--space-5);
+    }
+    .add-item-form {
+      display:flex; gap:var(--space-3); align-items:center;
+      background:var(--c-surface-2); border:1px solid var(--c-border);
+      border-radius:var(--r-xl);
+      padding:var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+      transition:border-color var(--t-fast);
+    }
+    .add-item-form:focus-within { border-color:rgba(201,168,76,0.35); }
+    .add-item-input {
+      flex:1; background:transparent; border:none; outline:none;
+      font-family:var(--font-body); font-size:var(--fs-base);
+      color:var(--c-text); caret-color:var(--c-gold);
+    }
+    .add-item-input::placeholder { color:var(--c-text-faint); }
+    .add-item-select {
+      background:var(--c-surface-3); border:1px solid var(--c-border);
+      border-radius:var(--r-md); color:var(--c-text-muted);
+      font-family:var(--font-body); font-size:var(--fs-xs);
+      padding:var(--space-2) var(--space-3); outline:none; cursor:pointer;
+    }
+    .add-item-submit {
+      width:36px; height:36px; border-radius:var(--r-md); border:none;
+      background:var(--c-gold); color:var(--c-bg);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; flex-shrink:0;
+      transition:all var(--t-fast) var(--ease-in-out);
+    }
+    .add-item-submit:hover  { background:var(--c-gold-light); }
+    .add-item-submit:active { transform:scale(0.92); }
+    .all-done-state {
+      display:none; flex-direction:column; align-items:center;
+      text-align:center; padding:var(--space-10) var(--space-5); gap:var(--space-3);
+    }
+    .all-done-state.is-visible { display:flex; }
+    .all-done-icon { font-size:48px; animation:done-bounce 0.6s var(--ease-out-expo); }
+    @keyframes done-bounce {
+      0%  { transform:scale(0.5); opacity:0; }
+      70% { transform:scale(1.15); }
+      100%{ transform:scale(1); opacity:1; }
+    }
+    .all-done-title {
+      font-family:var(--font-display); font-size:var(--fs-xl);
+      font-weight:var(--fw-light); color:var(--c-gold);
+    }
+    .all-done-sub { font-size:var(--fs-sm); color:var(--c-text-muted); }
+    @keyframes item-remove {
+      from { opacity:1; transform:translateX(0) scaleY(1); max-height:80px; margin-bottom:var(--space-2); }
+      to   { opacity:0; transform:translateX(60px) scaleY(0.7); max-height:0; margin-bottom:0; padding-top:0; padding-bottom:0; }
+    }
+    .checklist-item.is-removing {
+      animation:item-remove 0.3s var(--ease-in-out) forwards;
+      pointer-events:none;
+    }
+
+
+    /* ============================================================
+       DOKUMENT-TRESOR STYLES
+    ============================================================ */
+    .tresor-hero {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+      padding: var(--space-5) 0 var(--space-6);
+      border-bottom: 1px solid var(--c-border);
+      margin-bottom: var(--space-6);
+    }
+    .tresor-hero__icon {
+      width: 48px; height: 48px;
+      background: var(--c-gold-dim);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: var(--r-lg);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--c-gold); flex-shrink: 0;
+    }
+    .tresor-hero__title {
+      font-family: var(--font-display);
+      font-size: var(--fs-2xl); font-weight: var(--fw-light);
+      color: var(--c-text); line-height: 1.1;
+    }
+    .tresor-hero__sub { font-size: var(--fs-sm); color: var(--c-text-muted); margin-top: 2px; }
+
+    /* Upload-Dropzone */
+    .upload-zone {
+      border: 1.5px dashed rgba(201,168,76,0.25);
+      border-radius: var(--r-xl);
+      padding: var(--space-10) var(--space-6);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--t-normal) var(--ease-out-expo);
+      background: rgba(201,168,76,0.02);
+      position: relative;
+      margin-bottom: var(--space-6);
+    }
+    .upload-zone:hover, .upload-zone.is-dragover {
+      border-color: rgba(201,168,76,0.55);
+      background: rgba(201,168,76,0.05);
+    }
+    .upload-zone.is-dragover { transform: scale(1.01); }
+    .upload-zone__icon { color: var(--c-gold); margin-bottom: var(--space-3); opacity: 0.7; }
+    .upload-zone__title {
+      font-family: var(--font-display);
+      font-size: var(--fs-lg); font-weight: var(--fw-light);
+      color: var(--c-text); margin-bottom: var(--space-2);
+    }
+    .upload-zone__sub { font-size: var(--fs-xs); color: var(--c-text-muted); letter-spacing: 0.06em; }
+    .upload-zone__input {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    /* Kategorie-Tabs (Dokumente) */
+    .doc-tabs {
+      display: flex; gap: var(--space-2);
+      margin-bottom: var(--space-5);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .doc-tabs::-webkit-scrollbar { display: none; }
+    .doc-tab {
+      flex-shrink: 0; display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--r-full); border: 1px solid var(--c-border);
+      background: transparent; font-family: var(--font-body);
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--c-text-muted); cursor: pointer;
+      transition: all var(--t-fast) var(--ease-in-out); white-space: nowrap;
+    }
+    .doc-tab:hover { background: var(--c-surface); color: var(--c-text); }
+    .doc-tab.is-active {
+      background: var(--c-gold-dim); border-color: rgba(201,168,76,0.3); color: var(--c-gold);
+    }
+    .doc-tab__count {
+      background: rgba(201,168,76,0.2); color: var(--c-gold);
+      border-radius: var(--r-full); padding: 1px 6px;
+      font-size: 10px; min-width: 18px; text-align: center;
+    }
+
+    /* Dokument-Grid */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--space-4);
+    }
+
+    /* Dokument-Karte */
+    .doc-card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--t-normal) var(--ease-out-expo);
+      position: relative;
+    }
+    .doc-card:hover {
+      border-color: rgba(255,255,255,0.12);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .doc-card:active { transform: scale(0.97); }
+
+    /* Vorschau-Bereich */
+    .doc-card__preview {
+      width: 100%; aspect-ratio: 3/2;
+      background: var(--c-surface-2);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .doc-card__preview img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform var(--t-slow) var(--ease-out-expo);
+    }
+    .doc-card:hover .doc-card__preview img { transform: scale(1.05); }
+    .doc-card__preview-icon { color: var(--c-text-faint); opacity: 0.5; }
+
+    /* Typ-Badge */
+    .doc-type-badge {
+      position: absolute; top: var(--space-2); left: var(--space-2);
+      padding: 2px 8px; border-radius: var(--r-full);
+      font-size: 10px; font-weight: var(--fw-medium);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+    .doc-type-badge--ticket   { background: rgba(58,111,216,0.7);  color: #a0c0ff; }
+    .doc-type-badge--hotel    { background: rgba(42,184,160,0.7);  color: #a0ffe8; }
+    .doc-type-badge--insurance{ background: rgba(201,168,76,0.7);  color: #fff0a0; }
+    .doc-type-badge--visa     { background: rgba(216,74,111,0.7);  color: #ffb0c8; }
+    .doc-type-badge--other    { background: rgba(128,128,160,0.6); color: #c0c0e0; }
+
+    /* Loeschen-Button auf Karte */
+    .doc-card__delete {
+      position: absolute; top: var(--space-2); right: var(--space-2);
+      width: 26px; height: 26px; border-radius: var(--r-full);
+      background: rgba(8,8,14,0.8); border: 1px solid rgba(255,255,255,0.1);
+      color: var(--c-text-muted); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0;
+      transition: opacity var(--t-fast), background var(--t-fast);
+    }
+    .doc-card:hover .doc-card__delete { opacity: 1; }
+    .doc-card__delete:hover { background: rgba(216,74,111,0.4); color: #ff8080; }
+
+    .doc-card__info { padding: var(--space-3) var(--space-3) var(--space-4); }
+    .doc-card__name {
+      font-size: var(--fs-sm); color: var(--c-text); font-weight: var(--fw-medium);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .doc-card__meta { font-size: var(--fs-xs); color: var(--c-text-muted); }
+
+    /* Dokument-Speicher-Anzeige */
+    .storage-bar {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      margin-bottom: var(--space-5);
+    }
+    .storage-bar__label { font-size: var(--fs-xs); color: var(--c-text-muted); flex: 1; }
+    .storage-bar__value { font-size: var(--fs-xs); color: var(--c-gold); font-weight: var(--fw-medium); }
+
+    /* ============================================================
+       DOKUMENT-VIEWER MODAL
+    ============================================================ */
+    .doc-modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(4,4,8,0.92);
+      backdrop-filter: blur(20px);
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--space-5);
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--t-normal) var(--ease-in-out);
+    }
+    .doc-modal-overlay.is-open {
+      opacity: 1; pointer-events: all;
+    }
+    .doc-modal {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-xl);
+      width: min(600px, 100%);
+      max-height: 90dvh;
+      display: flex; flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(16px) scale(0.97);
+      transition: transform var(--t-normal) var(--ease-out-expo);
+      overflow: hidden;
+    }
+    .doc-modal-overlay.is-open .doc-modal {
+      transform: translateY(0) scale(1);
+    }
+    .doc-modal__header {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--c-border);
+      flex-shrink: 0;
+    }
+    .doc-modal__title {
+      flex: 1; font-size: var(--fs-base); font-weight: var(--fw-medium);
+      color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .doc-modal__body {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 200px; background: var(--c-surface-2);
+    }
+    .doc-modal__body img {
+      max-width: 100%; max-height: 70dvh; object-fit: contain;
+      border-radius: var(--r-md);
+    }
+    .doc-modal__pdf-frame {
+      width: 100%; height: 70dvh; border: none;
+    }
+    .doc-modal__footer {
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--c-border);
+      display: flex; gap: var(--space-3); flex-shrink: 0;
+    }
+
+    /* Upload-Fortschritt */
+    .upload-progress {
+      position: fixed; bottom: calc(var(--nav-height) + var(--safe-bottom) + 70px);
+      left: var(--space-5); right: var(--space-5);
+      background: var(--c-surface-2);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: var(--space-4) var(--space-5);
+      display: none; gap: var(--space-3); align-items: center;
+      box-shadow: var(--shadow-lg); z-index: 200;
+    }
+    .upload-progress.is-visible { display: flex; }
+    .upload-progress__bar-wrap {
+      flex: 1; height: 3px; background: var(--c-surface-3);
+      border-radius: var(--r-full); overflow: hidden;
+    }
+    .upload-progress__bar {
+      height: 100%; background: var(--c-gold);
+      border-radius: var(--r-full);
+      transition: width 0.3s var(--ease-out-expo);
+    }
+    .upload-progress__label { font-size: var(--fs-xs); color: var(--c-text-muted); white-space: nowrap; }
+
+
+
+    /* ============================================================
+       ARCHIV: ONEDRIVE + BILDBAND STYLES
+    ============================================================ */
+
+    /* Login-Zustand */
+    .onedrive-connect {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; padding: var(--space-12) var(--space-5);
+      gap: var(--space-5);
+    }
+    .onedrive-logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #0078d4 0%, #50e6ff 100%);
+      border-radius: var(--r-xl);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(0,120,212,0.3);
+    }
+    .onedrive-connect__title {
+      font-family: var(--font-display); font-size: var(--fs-2xl);
+      font-weight: var(--fw-light); color: var(--c-text);
+    }
+    .onedrive-connect__desc {
+      font-size: var(--fs-sm); color: var(--c-text-muted);
+      max-width: 300px; line-height: 1.7;
+    }
+    .onedrive-connect__features {
+      display: flex; flex-direction: column; gap: var(--space-2);
+      width: 100%; max-width: 280px;
+    }
+    .onedrive-feature {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--c-text-muted);
+      text-align: left;
+    }
+    .onedrive-feature svg { color: var(--c-gold); flex-shrink: 0; }
+
+    /* Auth-Status-Bar */
+    .auth-bar {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: rgba(0,120,212,0.08);
+      border: 1px solid rgba(0,120,212,0.2);
+      border-radius: var(--r-md); margin-bottom: var(--space-5);
+    }
+    .auth-bar__avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg,#0078d4,#50e6ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; color: white; flex-shrink: 0;
+    }
+    .auth-bar__name { flex: 1; font-size: var(--fs-sm); color: var(--c-text); }
+    .auth-bar__email { font-size: var(--fs-xs); color: var(--c-text-muted); }
+    .auth-bar__disconnect {
+      font-size: var(--fs-xs); color: var(--c-text-faint); background: none;
+      border: none; cursor: pointer; padding: 4px 8px;
+      border-radius: var(--r-sm); transition: color var(--t-fast);
+    }
+    .auth-bar__disconnect:hover { color: var(--c-accent-rose); }
+
+    /* Reise-Auswahl */
+    .trip-selector {
+      display: flex; flex-direction: column; gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+    .trip-selector__label {
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--c-text-muted);
+    }
+    .trip-select-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: var(--space-3);
+    }
+    .trip-select-card {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-lg); padding: var(--space-4);
+      cursor: pointer; transition: all var(--t-normal) var(--ease-out-expo);
+      position: relative; overflow: hidden;
+    }
+    .trip-select-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      background: var(--c-surface-2);
+      transform: translateY(-2px);
+    }
+    .trip-select-card.is-active {
+      border-color: var(--c-gold);
+      background: var(--c-gold-dim);
+    }
+    .trip-select-card__year {
+      font-size: var(--fs-xs); color: var(--c-gold);
+      font-weight: var(--fw-medium); letter-spacing: 0.08em;
+      margin-bottom: var(--space-1);
+    }
+    .trip-select-card__name {
+      font-family: var(--font-display); font-size: var(--fs-lg);
+      font-weight: var(--fw-light); color: var(--c-text); line-height: 1.2;
+    }
+    .trip-select-card__count {
+      font-size: var(--fs-xs); color: var(--c-text-muted); margin-top: var(--space-2);
+    }
+
+    /* Bildband-Layout: Masonry-Feeling mit CSS Grid */
+    .bildband-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: var(--space-5); padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--c-border);
+    }
+    .bildband-header__back {
+      display: flex; align-items: center; gap: var(--space-2);
+      color: var(--c-text-muted); cursor: pointer; background: none; border: none;
+      font-family: var(--font-body); font-size: var(--fs-sm);
+      transition: color var(--t-fast);
+    }
+    .bildband-header__back:hover { color: var(--c-gold); }
+    .bildband-header__title {
+      font-family: var(--font-display); font-size: var(--fs-2xl);
+      font-weight: var(--fw-light); color: var(--c-text); text-align: right;
+    }
+    .bildband-header__sub {
+      font-size: var(--fs-xs); color: var(--c-text-muted); text-align: right;
+    }
+
+    /* Foto-Grid: 2 Spalten, abwechselnd groesser */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+      margin-bottom: var(--space-6);
+    }
+    .photo-card {
+      border-radius: var(--r-md); overflow: hidden;
+      cursor: pointer; position: relative;
+      background: var(--c-surface-2);
+      transition: transform var(--t-normal) var(--ease-out-expo);
+    }
+    .photo-card:hover { transform: scale(1.02); z-index: 1; }
+    .photo-card:active { transform: scale(0.98); }
+
+    /* Jedes 5. Foto: volle Breite */
+    .photo-card:nth-child(5n+1) { grid-column: span 2; }
+    .photo-card:nth-child(5n+1) .photo-card__img { aspect-ratio: 16/9; }
+
+    .photo-card__img {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; display: block;
+      transition: filter var(--t-normal);
+    }
+    .photo-card:hover .photo-card__img { filter: brightness(1.05); }
+
+    .photo-card__overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(4,4,8,0.7) 0%, transparent 50%);
+      opacity: 0; transition: opacity var(--t-normal);
+    }
+    .photo-card:hover .photo-card__overlay { opacity: 1; }
+
+    .photo-card__date {
+      position: absolute; bottom: var(--space-2); left: var(--space-3);
+      font-size: 10px; color: rgba(255,255,255,0.7);
+      opacity: 0; transition: opacity var(--t-normal);
+    }
+    .photo-card:hover .photo-card__date { opacity: 1; }
+
+    /* Kommentar-Badge */
+    .photo-card__comment-dot {
+      position: absolute; top: var(--space-2); right: var(--space-2);
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--c-gold); box-shadow: 0 0 8px var(--c-gold);
+    }
+
+    /* Foto-Lightbox mit Kommentarspalte */
+    .photo-lightbox {
+      position: fixed; inset: 0; z-index: 600;
+      background: rgba(4,4,8,0.96);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--t-normal) var(--ease-in-out);
+    }
+    .photo-lightbox.is-open { opacity: 1; pointer-events: all; }
+
+    .lightbox-topbar {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      padding-top: calc(var(--space-4) + var(--safe-top));
+      flex-shrink: 0;
+    }
+    .lightbox-title {
+      flex: 1; font-family: var(--font-display); font-size: var(--fs-lg);
+      font-weight: var(--fw-light); color: var(--c-text);
+    }
+    .lightbox-counter { font-size: var(--fs-xs); color: var(--c-text-muted); }
+
+    /* Split-Layout ab 640px: Foto links, Kommentar rechts */
+    .lightbox-body {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    @media (min-width: 640px) {
+      .lightbox-body { flex-direction: row; }
+    }
+
+    .lightbox-photo {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: var(--space-4); min-height: 0;
+      position: relative;
+    }
+    .lightbox-photo img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain; border-radius: var(--r-md);
+      user-select: none;
+    }
+
+    /* Nav-Pfeile */
+    .lightbox-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 40px; height: 40px; border-radius: var(--r-full);
+      background: rgba(15,15,26,0.8); border: 1px solid var(--c-border);
+      color: var(--c-text-muted); display: flex; align-items: center;
+      justify-content: center; cursor: pointer;
+      transition: all var(--t-fast) var(--ease-in-out);
+    }
+    .lightbox-arrow:hover { background: var(--c-surface-2); color: var(--c-gold); }
+    .lightbox-arrow--prev { left: var(--space-3); }
+    .lightbox-arrow--next { right: var(--space-3); }
+
+    /* Kommentar-Panel */
+    .lightbox-comments {
+      width: 100%; max-height: 240px;
+      background: var(--c-surface);
+      border-top: 1px solid var(--c-border);
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+    }
+    @media (min-width: 640px) {
+      .lightbox-comments {
+        width: 300px; max-height: none;
+        border-top: none; border-left: 1px solid var(--c-border);
+      }
+    }
+    .comments-header {
+      padding: var(--space-4) var(--space-5) var(--space-2);
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-text-muted);
+      flex-shrink: 0;
+    }
+    .comments-list {
+      flex: 1; overflow-y: auto; padding: 0 var(--space-5) var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-3);
+    }
+    .comment-item {
+      background: var(--c-surface-2); border-radius: var(--r-md);
+      padding: var(--space-3) var(--space-4);
+    }
+    .comment-item__text { font-size: var(--fs-sm); color: var(--c-text); line-height: 1.5; }
+    .comment-item__meta {
+      font-size: 10px; color: var(--c-text-muted); margin-top: 4px;
+    }
+    .comment-empty {
+      font-size: var(--fs-sm); color: var(--c-text-faint);
+      font-style: italic; text-align: center; padding: var(--space-6) 0;
+    }
+    .comment-input-wrap {
+      padding: var(--space-3) var(--space-5) var(--space-4);
+      display: flex; gap: var(--space-2);
+      border-top: 1px solid var(--c-border); flex-shrink: 0;
+    }
+    .comment-input {
+      flex: 1; background: var(--c-surface-2);
+      border: 1px solid var(--c-border); border-radius: var(--r-md);
+      padding: var(--space-2) var(--space-3);
+      font-family: var(--font-body); font-size: var(--fs-sm);
+      color: var(--c-text); outline: none; caret-color: var(--c-gold);
+      resize: none;
+    }
+    .comment-input::placeholder { color: var(--c-text-faint); }
+    .comment-submit {
+      width: 34px; height: 34px; border-radius: var(--r-md); border: none;
+      background: var(--c-gold); color: var(--c-bg);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; align-self: flex-end;
+      transition: all var(--t-fast) var(--ease-in-out);
+    }
+    .comment-submit:hover  { background: var(--c-gold-light); }
+    .comment-submit:active { transform: scale(0.92); }
+
+    /* Lade-Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg,
+        var(--c-surface-2) 0%, var(--c-surface-3) 50%, var(--c-surface-2) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-sweep 1.4s ease-in-out infinite;
+      border-radius: var(--r-md);
+    }
+    @keyframes skeleton-sweep {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+
+    /* ============================================================
+       VIEW: KARTE
+    ============================================================ */
+    .map-container {
+      margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-5));
+      height: calc(100dvh - var(--nav-height) - 60px);
+      position: relative;
+    }
+
+    #leaflet-map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Leaflet Dark-Mode Override */
+    .leaflet-tile {
+      filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+    }
+
+    .leaflet-container {
+      background: var(--c-bg);
+    }
+
+    /* Map Controls Overlay */
+    .map-overlay {
+      position: absolute;
+      top: var(--space-4);
+      left: var(--space-4);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .map-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: rgba(10, 10, 18, 0.9);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-full);
+      font-size: var(--fs-sm);
+      color: var(--c-text);
+    }
+
+    .map-badge strong {
+      color: var(--c-gold);
+      font-weight: var(--fw-medium);
+    }
+
+    /* ============================================================
+       VIEW: ARCHIV (OneDrive)
+    ============================================================ */
+    .archive-hero {
+      text-align: center;
+      padding: var(--space-12) var(--space-5);
+    }
+
+    .archive-hero__icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-5);
+      color: var(--c-text-muted);
+    }
+
+    .archive-hero__title {
+      font-family: var(--font-display);
+      font-size: var(--fs-2xl);
+      font-weight: var(--fw-light);
+      color: var(--c-text);
+      margin-bottom: var(--space-3);
+    }
+
+    .archive-hero__desc {
+      font-size: var(--fs-sm);
+      color: var(--c-text-muted);
+      max-width: 280px;
+      margin: 0 auto var(--space-8);
+      line-height: 1.7;
+    }
+
+    /* Primaer-Button */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-8);
+      background: var(--c-gold);
+      color: var(--c-bg);
+      border: none;
+      border-radius: var(--r-full);
+      font-family: var(--font-body);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all var(--t-normal) var(--ease-out-expo);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .btn-primary:hover {
+      background: var(--c-gold-light);
+      transform: translateY(-1px);
+      box-shadow: 0 0 40px rgba(201, 168, 76, 0.2);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    /* Sekundaer-Button */
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-6);
+      background: transparent;
+      color: var(--c-text-muted);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-full);
+      font-family: var(--font-body);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all var(--t-fast) var(--ease-in-out);
+    }
+
+    .btn-secondary:hover {
+      background: var(--c-surface);
+      color: var(--c-text);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    /* ============================================================
+       LEERER ZUSTAND
+    ============================================================ */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-16) var(--space-5);
+      gap: var(--space-4);
+    }
+
+    .empty-state__icon {
+      width: 48px;
+      height: 48px;
+      color: var(--c-text-faint);
+    }
+
+    .empty-state__title {
+      font-family: var(--font-display);
+      font-size: var(--fs-xl);
+      font-weight: var(--fw-light);
+      color: var(--c-text-muted);
+    }
+
+    .empty-state__text {
+      font-size: var(--fs-sm);
+      color: var(--c-text-muted);
+      max-width: 240px;
+      line-height: 1.7;
+    }
+
+    /* ============================================================
+       TOAST-BENACHRICHTIGUNGEN
+    ============================================================ */
+    #toast-container {
+      position: fixed;
+      bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: var(--space-2);
+      width: min(calc(100vw - 2 * var(--space-5)), 360px);
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      background: rgba(30, 30, 53, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-lg);
+      font-size: var(--fs-sm);
+      color: var(--c-text);
+      animation: toast-in 240ms var(--ease-out-expo) forwards;
+      pointer-events: all;
+    }
+
+    .toast.is-leaving {
+      animation: toast-out 200ms var(--ease-in-out) forwards;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(4px) scale(0.97); }
+    }
+
+    .toast__icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .toast--success .toast__icon { color: var(--c-online); }
+    .toast--error   .toast__icon { color: var(--c-accent-rose); }
+    .toast--info    .toast__icon { color: var(--c-gold); }
+
+    /* ============================================================
+       INSTALL-BANNER (A2HS)
+    ============================================================ */
+    #install-banner {
+      display: none;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      background: var(--c-gold-dim);
+      border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+      font-size: var(--fs-sm);
+      color: var(--c-text);
+    }
+
+    #install-banner.is-visible {
+      display: flex;
+    }
+
+    #install-banner .banner-text { flex: 1; }
+    #install-banner .banner-text strong { color: var(--c-gold); }
+
+
+    /* ============================================================
+       EINSTELLUNGS-OVERLAY
+    ============================================================ */
+    .settings-overlay {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(4,4,8,0.88);
+      backdrop-filter: blur(24px);
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--t-normal) var(--ease-in-out);
+      padding: 0;
+    }
+    .settings-overlay.is-open {
+      opacity: 1; pointer-events: all;
+    }
+    .settings-sheet {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-xl) var(--r-xl) 0 0;
+      width: min(560px, 100%);
+      max-height: 92dvh;
+      display: flex; flex-direction: column;
+      transform: translateY(40px);
+      transition: transform var(--t-normal) var(--ease-out-expo);
+      overflow: hidden;
+    }
+    .settings-overlay.is-open .settings-sheet {
+      transform: translateY(0);
+    }
+    .settings-handle {
+      width: 36px; height: 4px; border-radius: var(--r-full);
+      background: var(--c-surface-3); margin: 12px auto 0; flex-shrink: 0;
+    }
+    .settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-5) var(--space-6) var(--space-4);
+      flex-shrink: 0;
+    }
+    .settings-header__title {
+      font-family: var(--font-display); font-size: var(--fs-xl);
+      font-weight: var(--fw-light); color: var(--c-text);
+    }
+    .settings-body {
+      flex: 1; overflow-y: auto; padding: 0 var(--space-6) var(--space-8);
+      display: flex; flex-direction: column; gap: var(--space-6);
+    }
+
+    /* Einstellungs-Sektion */
+    .settings-section { display: flex; flex-direction: column; gap: var(--space-3); }
+    .settings-section__title {
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--c-text-muted);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--c-border);
+    }
+
+    /* Einstellungs-Zeile */
+    .settings-row {
+      display: flex; align-items: flex-start; gap: var(--space-4);
+      padding: var(--space-4) var(--space-4);
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+    }
+    .settings-row__icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: var(--c-surface-3); display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; color: var(--c-gold);
+    }
+    .settings-row__body { flex: 1; min-width: 0; }
+    .settings-row__label {
+      font-size: var(--fs-sm); font-weight: var(--fw-medium);
+      color: var(--c-text); margin-bottom: 3px;
+    }
+    .settings-row__desc {
+      font-size: var(--fs-xs); color: var(--c-text-muted); line-height: 1.6;
+    }
+
+    /* Eingabefeld in Einstellungen */
+    .settings-input-wrap {
+      display: flex; gap: var(--space-2); margin-top: var(--space-3); align-items: center;
+    }
+    .settings-input {
+      flex: 1; background: var(--c-surface);
+      border: 1px solid var(--c-border); border-radius: var(--r-md);
+      padding: var(--space-3) var(--space-4);
+      font-family: var(--font-body); font-size: var(--fs-sm);
+      color: var(--c-text); outline: none;
+      caret-color: var(--c-gold);
+      transition: border-color var(--t-fast);
+    }
+    .settings-input:focus { border-color: rgba(201,168,76,0.4); }
+    .settings-input::placeholder { color: var(--c-text-faint); font-size: 12px; }
+
+    /* Status-Pill in Einstellungen */
+    .settings-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: var(--r-full);
+      font-size: 11px; font-weight: 500; letter-spacing: .06em;
+      text-transform: uppercase; margin-top: var(--space-2);
+    }
+    .settings-status--ok      { background: rgba(42,184,122,0.12); color: var(--c-online); }
+    .settings-status--missing { background: rgba(201,168,76,0.1);  color: var(--c-gold); }
+    .settings-status--error   { background: rgba(216,74,111,0.12); color: var(--c-accent-rose); }
+    .settings-status__dot {
+      width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    }
+
+    /* Info-Box */
+    .settings-info {
+      background: rgba(58,111,216,0.07); border: 1px solid rgba(58,111,216,0.15);
+      border-radius: var(--r-md); padding: var(--space-4);
+      font-size: var(--fs-xs); color: var(--c-text-muted); line-height: 1.7;
+    }
+    .settings-info a { color: var(--c-gold); text-decoration: none; }
+    .settings-info a:hover { text-decoration: underline; }
+
+    /* Schritt-Anleitung */
+    .setup-steps { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-3); }
+    .setup-step {
+      display: flex; gap: var(--space-3); align-items: flex-start;
+      padding: var(--space-3) var(--space-4);
+      background: var(--c-surface-3); border-radius: var(--r-md);
+    }
+    .setup-step__num {
+      width: 20px; height: 20px; border-radius: 50%; background: var(--c-gold-dim);
+      border: 1px solid rgba(201,168,76,0.3); color: var(--c-gold);
+      font-size: 11px; font-weight: 600; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .setup-step__text {
+      font-size: var(--fs-xs); color: var(--c-text-muted); line-height: 1.6; flex: 1;
+    }
+    .setup-step__text strong { color: var(--c-text); }
+    .setup-step__text code {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: 4px; padding: 1px 6px; font-size: 11px;
+      color: var(--c-gold); word-break: break-all;
+    }
+
+    /* Toggle */
+    .settings-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-3) var(--space-4);
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+    }
+    .settings-toggle-label { font-size: var(--fs-sm); color: var(--c-text); }
+    .settings-toggle-sub   { font-size: var(--fs-xs); color: var(--c-text-muted); margin-top: 2px; }
+    .toggle-switch {
+      width: 44px; height: 24px; border-radius: var(--r-full);
+      background: var(--c-surface-3); border: 1px solid var(--c-border);
+      cursor: pointer; position: relative; flex-shrink: 0;
+      transition: background var(--t-normal), border-color var(--t-normal);
+    }
+    .toggle-switch.is-on {
+      background: var(--c-gold); border-color: var(--c-gold);
+    }
+    .toggle-switch::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--c-text-muted);
+      transition: transform var(--t-normal) var(--ease-out-expo), background var(--t-normal);
+    }
+    .toggle-switch.is-on::after {
+      transform: translateX(20px); background: var(--c-bg);
+    }
+
+    /* Daten-Statistiken */
+    .data-stats {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+    .data-stat {
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      border-radius: var(--r-md); padding: var(--space-3) var(--space-4);
+      text-align: center;
+    }
+    .data-stat__value {
+      font-family: var(--font-display); font-size: var(--fs-xl);
+      font-weight: var(--fw-light); color: var(--c-gold);
+    }
+    .data-stat__label { font-size: var(--fs-xs); color: var(--c-text-muted); margin-top: 2px; }
+
+    /* Danger-Zone */
+    .danger-btn {
+      display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+      width: 100%; padding: var(--space-3) var(--space-5);
+      background: transparent; border: 1px solid rgba(216,74,111,0.25);
+      border-radius: var(--r-md); color: var(--c-accent-rose);
+      font-family: var(--font-body); font-size: var(--fs-sm);
+      cursor: pointer; transition: all var(--t-fast) var(--ease-in-out);
+    }
+    .danger-btn:hover {
+      background: rgba(216,74,111,0.08); border-color: rgba(216,74,111,0.45);
+    }
+
+
+    /* ============================================================
+       RESPONSIVE: TABLET / DESKTOP
+    ============================================================ */
+    @media (min-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .dashboard-card--wide {
+        grid-column: span 2;
+      }
+
+      .view {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: var(--space-8) var(--space-6);
+      }
+
+      .map-container {
+        margin: 0;
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        height: calc(100dvh - var(--nav-height) - 140px);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #app {
+        padding-bottom: 0;
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        grid-template-rows: 64px 1fr;
+        grid-template-areas:
+          "topbar topbar"
+          "sidebar main";
+      }
+
+      .topbar {
+        grid-area: topbar;
+      }
+
+      .bottom-nav {
+        position: sticky;
+        grid-area: sidebar;
+        height: auto;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: var(--space-6) var(--space-4);
+        border-top: none;
+        border-right: 1px solid var(--c-border);
+        gap: var(--space-1);
+      }
+
+      .nav-item {
+        flex: initial;
+        flex-direction: row;
+        justify-content: flex-start;
+        width: 100%;
+        padding: var(--space-3) var(--space-4);
+        border-radius: var(--r-md);
+        gap: var(--space-3);
+      }
+
+      .nav-item.is-active {
+        background: var(--c-gold-dim);
+      }
+
+      .nav-item.is-active::before {
+        top: 50%;
+        left: 0;
+        width: 2px;
+        height: 24px;
+        border-radius: 0 var(--r-full) var(--r-full) 0;
+        transform: translateY(-50%);
+      }
+
+      .nav-item.is-active .nav-item__icon {
+        transform: none;
+      }
+
+      .nav-item__label {
+        font-size: var(--fs-sm);
+        letter-spacing: 0.04em;
+        text-transform: none;
+      }
+
+      .main-content {
+        grid-area: main;
+      }
+
+      .view {
+        max-width: 800px;
+        padding: var(--space-8);
+      }
+    }
+
+    /* ============================================================
+       ACCESSIBILITY
+    ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--c-gold);
+      outline-offset: 3px;
+      border-radius: var(--r-sm);
+    }
+
+    /* Scrollbar-Styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--c-surface-3);
+      border-radius: var(--r-full);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--c-text-faint); }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- ======================================================
+         INSTALL BANNER (A2HS)
+    ====================================================== -->
+    <div id="install-banner" role="banner" aria-label="App installieren">
+      <svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-gold);width:20px;height:20px;">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+      <span class="banner-text"><strong>GlobeTrotter SQL</strong> als App installieren</span>
+      <button class="btn-secondary" id="btn-install" style="padding:6px 16px;">Installieren</button>
+      <button class="icon-btn" id="btn-install-dismiss" aria-label="Schliessen" style="border:none;background:transparent;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ======================================================
+         TOP BAR
+    ====================================================== -->
+    <header class="topbar" role="banner">
+      <a class="topbar-brand" href="#" aria-label="GlobeTrotter SQL - Startseite">
+        <span class="topbar-logo">GlobeTrotter</span>
+        <span class="topbar-sub">SQL</span>
+      </a>
+
+      <div class="topbar-actions">
+        <div class="status-pill" id="status-pill" role="status" aria-live="polite">
+          <span class="status-pill__dot"></span>
+          <span class="status-pill__label" id="status-label">Offline</span>
+        </div>
+        <button class="icon-btn" id="btn-settings" aria-label="Einstellungen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================
+         HAUPT-INHALT
+    ====================================================== -->
+    <main class="main-content" id="main-content" role="main">
+
+      <!-- VIEW: Aktuelle Reise -->
+      <section class="view is-active" id="view-reise" data-view="reise" aria-label="Aktuelle Reise">
+
+        <div class="trip-hero">
+          <p class="trip-hero__kicker">Aktuelle Reise</p>
+          <h1 class="trip-hero__title" id="current-trip-name">Keine aktive Reise</h1>
+          <div class="trip-hero__meta" id="current-trip-meta">
+            <span class="trip-hero__meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Reise noch nicht gestartet
+            </span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid" id="dashboard-grid">
+          <!-- Dokumente -->
+          <div class="dashboard-card" data-action="open-documents" role="button" tabindex="0" aria-label="Dokumente oeffnen">
+            <svg class="dashboard-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <div class="dashboard-card__value" id="doc-count">0</div>
+            <div class="dashboard-card__label">Dokumente</div>
+          </div>
+
+          <!-- Checkliste -->
+          <div class="dashboard-card" data-action="open-checklist" role="button" tabindex="0" aria-label="Checkliste oeffnen">
+            <svg class="dashboard-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <div class="dashboard-card__value" id="checklist-progress-text">0 / 0</div>
+            <div class="dashboard-card__label">Checkliste</div>
+            <div class="progress-bar">
+              <div class="progress-bar__fill" id="checklist-progress-bar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Offline-Karte -->
+          <div class="dashboard-card dashboard-card--wide" data-action="open-map" role="button" tabindex="0" aria-label="Offline-Karte oeffnen">
+            <svg class="dashboard-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>
+            </svg>
+            <div class="dashboard-card__value">Karte</div>
+            <div class="dashboard-card__label">Offline-Karte fuer diesen Reiseort</div>
+          </div>
+        </div>
+
+        <div class="empty-state" id="no-trip-state">
+          <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p class="empty-state__title">Noch keine Reise</p>
+          <p class="empty-state__text">Erstelle deine erste Reise und speichere Tickets, Hotels und Checklisten offline.</p>
+          <button class="btn-primary" id="btn-new-trip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 5v14M5 12h14"/></svg>
+            Neue Reise erstellen
+          </button>
+        </div>
+
+      </section>
+
+
+      <!-- VIEW: Checkliste -->
+      <section class="view" id="view-checkliste" data-view="checkliste" aria-label="Packliste">
+
+        <!-- Fortschritts-Hero -->
+        <div class="checklist-hero">
+          <div class="progress-ring" id="cl-ring" aria-hidden="true">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <defs>
+                <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#e8c97a"/>
+                  <stop offset="100%" stop-color="#c9a84c"/>
+                </linearGradient>
+              </defs>
+              <circle class="progress-ring__track" cx="40" cy="40" r="34"/>
+              <circle class="progress-ring__fill" id="cl-ring-fill"
+                cx="40" cy="40" r="34"
+                stroke-dasharray="213.6"
+                stroke-dashoffset="213.6"/>
+            </svg>
+            <div class="progress-ring__label">
+              <span id="cl-percent">0</span>
+              <span class="progress-ring__sub">%</span>
+            </div>
+          </div>
+          <div class="checklist-hero__info">
+            <h2 class="checklist-hero__title">Packliste</h2>
+            <p class="checklist-hero__sub" id="cl-summary">Noch nichts hinzugefuegt</p>
+            <button class="btn-secondary" id="cl-reset-btn"
+              style="padding:6px 16px;font-size:11px;"
+              aria-label="Alle zuruecksetzen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              Alle zurueck
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter-Tabs -->
+        <div class="filter-tabs" role="tablist" aria-label="Kategorie-Filter">
+          <button class="filter-tab is-active" data-filter="all" role="tab">Alle</button>
+          <button class="filter-tab" data-filter="offen" role="tab">Offen</button>
+          <button class="filter-tab" data-filter="done" role="tab">Erledigt</button>
+          <button class="filter-tab" data-filter="dokumente" role="tab">&#128196; Dokumente</button>
+          <button class="filter-tab" data-filter="kleidung" role="tab">&#128084; Kleidung</button>
+          <button class="filter-tab" data-filter="technik" role="tab">&#128241; Technik</button>
+          <button class="filter-tab" data-filter="gesundheit" role="tab">&#128138; Gesundheit</button>
+          <button class="filter-tab" data-filter="sonstiges" role="tab">&#128230; Sonstiges</button>
+        </div>
+
+        <!-- Alle-erledigt Zustand -->
+        <div class="all-done-state" id="cl-all-done">
+          <div class="all-done-icon">&#127881;</div>
+          <p class="all-done-title">Alles erledigt!</p>
+          <p class="all-done-sub">Du bist bestens vorbereitet fuer die Reise.</p>
+        </div>
+
+        <!-- Liste -->
+        <div id="cl-list" role="list" aria-label="Checklisten-Eintraege"></div>
+
+        <!-- Neuen Eintrag hinzufuegen -->
+        <div class="add-item-bar">
+          <div class="add-item-form">
+            <input
+              class="add-item-input"
+              id="cl-new-input"
+              type="text"
+              placeholder="Eintrag hinzufuegen..."
+              maxlength="80"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+              aria-label="Neuer Checklisten-Eintrag"
+            />
+            <select class="add-item-select" id="cl-new-cat" aria-label="Kategorie">
+              <option value="sonstiges">Sonst.</option>
+              <option value="dokumente">&#128196; Dok.</option>
+              <option value="kleidung">&#128084; Kleid.</option>
+              <option value="technik">&#128241; Tech.</option>
+              <option value="gesundheit">&#128138; Ges.</option>
+            </select>
+            <button class="add-item-submit" id="cl-add-btn" aria-label="Hinzufuegen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- VIEW: Dokument-Tresor -->
+      <section class="view" id="view-tresor" data-view="tresor" aria-label="Dokument-Tresor">
+
+        <!-- Hero -->
+        <div class="tresor-hero">
+          <div class="tresor-hero__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              <circle cx="12" cy="16" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="tresor-hero__title">Dokument-Tresor</h2>
+            <p class="tresor-hero__sub" id="tresor-subtitle">Tickets, Hotel &amp; mehr sicher offline speichern</p>
+          </div>
+        </div>
+
+        <!-- Speicher-Anzeige -->
+        <div class="storage-bar" id="storage-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" style="color:var(--c-gold);flex-shrink:0">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+          <span class="storage-bar__label" id="storage-label">Lokaler Speicher</span>
+          <span class="storage-bar__value" id="storage-value">0 Dokumente</span>
+        </div>
+
+        <!-- Upload-Dropzone -->
+        <div class="upload-zone" id="upload-zone" role="button" tabindex="0"
+          aria-label="Dokument hochladen - PDF oder Bild">
+          <input
+            class="upload-zone__input"
+            id="doc-file-input"
+            type="file"
+            accept=".pdf,image/*"
+            multiple
+            aria-label="Dateien auswaehlen"
+          />
+          <svg class="upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" width="48" height="48">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="upload-zone__title">Dokument hinzufuegen</p>
+          <p class="upload-zone__sub">PDF, JPG, PNG, HEIC &middot; Offline verfuegbar</p>
+        </div>
+
+        <!-- Dokument-Typ-Tabs -->
+        <div class="doc-tabs" role="tablist" id="doc-tabs">
+          <button class="doc-tab is-active" data-docfilter="all">
+            Alle <span class="doc-tab__count" id="cnt-all">0</span>
+          </button>
+          <button class="doc-tab" data-docfilter="ticket">
+            &#9992; Tickets <span class="doc-tab__count" id="cnt-ticket">0</span>
+          </button>
+          <button class="doc-tab" data-docfilter="hotel">
+            &#127968; Hotel <span class="doc-tab__count" id="cnt-hotel">0</span>
+          </button>
+          <button class="doc-tab" data-docfilter="insurance">
+            &#128138; Versicherung <span class="doc-tab__count" id="cnt-insurance">0</span>
+          </button>
+          <button class="doc-tab" data-docfilter="visa">
+            &#128196; Visa <span class="doc-tab__count" id="cnt-visa">0</span>
+          </button>
+          <button class="doc-tab" data-docfilter="other">
+            &#128230; Sonstiges <span class="doc-tab__count" id="cnt-other">0</span>
+          </button>
+        </div>
+
+        <!-- Dokument-Grid -->
+        <div class="doc-grid" id="doc-grid" role="list"></div>
+
+        <!-- Leerer Zustand -->
+        <div class="empty-state" id="doc-empty" style="display:none;">
+          <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p class="empty-state__title">Noch keine Dokumente</p>
+          <p class="empty-state__text">Lade Tickets, Hotelbuchungen oder andere Reiseunterlagen hoch. Sie werden offline gespeichert.</p>
+        </div>
+
+      </section>
+
+      <!-- DOKUMENT-VIEWER MODAL -->
+      <div class="doc-modal-overlay" id="doc-modal-overlay" role="dialog" aria-modal="true" aria-label="Dokument-Ansicht">
+        <div class="doc-modal" id="doc-modal">
+          <div class="doc-modal__header">
+            <span class="doc-type-badge doc-type-badge--ticket" id="modal-type-badge">Ticket</span>
+            <span class="doc-modal__title" id="modal-title">Dokument</span>
+            <button class="icon-btn" id="modal-download-btn" aria-label="Herunterladen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+            <button class="icon-btn" id="modal-close-btn" aria-label="Schliessen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="doc-modal__body" id="modal-body">
+            <!-- Inhalt wird dynamisch geladen -->
+          </div>
+          <div class="doc-modal__footer">
+            <div style="flex:1">
+              <div style="font-size:12px;color:var(--c-text-muted)" id="modal-meta"></div>
+            </div>
+            <button class="btn-secondary" id="modal-delete-btn" style="padding:8px 16px;font-size:12px;color:var(--c-accent-rose);border-color:rgba(216,74,111,0.3);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+              </svg>
+              Loeschen
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPLOAD-FORTSCHRITT -->
+      <div class="upload-progress" id="upload-progress">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color:var(--c-gold);flex-shrink:0">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <div class="upload-progress__bar-wrap">
+          <div class="upload-progress__bar" id="upload-progress-bar" style="width:0%"></div>
+        </div>
+        <span class="upload-progress__label" id="upload-progress-label">Wird gespeichert...</span>
+      </div>
+
+      <!-- VIEW: Archiv (OneDrive) -->
+      <section class="view" id="view-archiv" data-view="archiv" aria-label="Reise-Archiv">
+
+        <!-- ZUSTAND 1: Nicht verbunden -->
+        <div class="onedrive-connect" id="archiv-login">
+          <div class="onedrive-logo" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="36" height="36" fill="white">
+              <path d="M18.8 13.2c.9-2.1 3-3.5 5.3-3.5 3.3 0 6 2.7 6 6s-2.7 6-6 6H8.5C5.5 21.7 3 19.2 3 16.2c0-2.7 1.9-5 4.5-5.6.4-3.2 3.1-5.6 6.4-5.6 2.2 0 4.2 1.1 5.4 2.8l-.5 5.4z"/>
+            </svg>
+          </div>
+          <h2 class="onedrive-connect__title">Reise-Archiv</h2>
+          <p class="onedrive-connect__desc">
+            Verbinde dein Microsoft OneDrive, um vergangene Reisefotos im eleganten Bildband-Modus zu erleben.
+          </p>
+          <div class="onedrive-connect__features">
+            <div class="onedrive-feature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 3 3 3-3"/>
+              </svg>
+              Fotos aus deinen OneDrive-Alben
+            </div>
+            <div class="onedrive-feature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Persoenliche Kommentare pro Foto
+            </div>
+            <div class="onedrive-feature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+              </svg>
+              Kommentare lokal offline gespeichert
+            </div>
+          </div>
+          <button class="btn-primary" id="btn-onedrive-connect">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+            </svg>
+            Mit Microsoft anmelden
+          </button>
+          <p style="font-size:11px;color:var(--c-text-faint);max-width:260px;line-height:1.6;">
+            Nur Lesezugriff auf deine Fotos. Keine Daten werden an Dritte weitergegeben.
+          </p>
+        </div>
+
+        <!-- ZUSTAND 2: Verbunden, Reise-Auswahl -->
+        <div id="archiv-connected" hidden>
+          <!-- Auth-Bar -->
+          <div class="auth-bar" id="archiv-auth-bar">
+            <div class="auth-bar__avatar" id="archiv-avatar">W</div>
+            <div>
+              <div class="auth-bar__name" id="archiv-user-name">Wird geladen...</div>
+              <div class="auth-bar__email" id="archiv-user-email"></div>
+            </div>
+            <button class="auth-bar__disconnect" id="btn-onedrive-disconnect">Abmelden</button>
+          </div>
+
+          <!-- Reisen-Auswahl -->
+          <div class="trip-selector" id="archiv-trip-selector">
+            <div class="trip-selector__label">Meine Reisen auf OneDrive</div>
+            <div class="trip-select-grid" id="archiv-trip-grid">
+              <!-- Skeleton-Cards beim Laden -->
+              <div class="trip-select-card"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
+              <div class="trip-select-card"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
+              <div class="trip-select-card"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZUSTAND 3: Bildband einer Reise -->
+        <div id="archiv-bildband" hidden>
+          <div class="bildband-header">
+            <button class="bildband-header__back" id="btn-bildband-back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+              Alle Reisen
+            </button>
+            <div>
+              <div class="bildband-header__title" id="bildband-trip-name">Reise</div>
+              <div class="bildband-header__sub" id="bildband-photo-count">0 Fotos</div>
+            </div>
+          </div>
+
+          <!-- Sortierung -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+            <span style="font-size:11px;color:var(--c-text-muted);letter-spacing:.1em;text-transform:uppercase;">Sortierung</span>
+            <button class="filter-tab is-active" data-bildsort="date-desc" style="padding:4px 12px;">Neueste</button>
+            <button class="filter-tab" data-bildsort="date-asc" style="padding:4px 12px;">Aelteste</button>
+            <button class="filter-tab" data-bildsort="commented" style="padding:4px 12px;">Kommentiert</button>
+          </div>
+
+          <div class="photo-grid" id="bildband-grid" role="list"></div>
+
+          <!-- Lade-mehr-Button -->
+          <div style="text-align:center;padding:16px 0;" id="bildband-load-more" hidden>
+            <button class="btn-secondary" id="btn-load-more-photos">Weitere Fotos laden</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- FOTO-LIGHTBOX MIT KOMMENTARSPALTE -->
+      <div class="photo-lightbox" id="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto-Ansicht">
+        <div class="lightbox-topbar">
+          <button class="icon-btn" id="lightbox-close" aria-label="Schliessen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+          <span class="lightbox-title" id="lightbox-title">Foto</span>
+          <span class="lightbox-counter" id="lightbox-counter">1 / 1</span>
+          <button class="icon-btn" id="lightbox-share" aria-label="Teilen" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="lightbox-body">
+          <div class="lightbox-photo">
+            <button class="lightbox-arrow lightbox-arrow--prev" id="lightbox-prev" aria-label="Vorheriges Foto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+            <img id="lightbox-img" src="" alt="" draggable="false" />
+            <button class="lightbox-arrow lightbox-arrow--next" id="lightbox-next" aria-label="Naechstes Foto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="lightbox-comments">
+            <div class="comments-header">Erinnerungen</div>
+            <div class="comments-list" id="comments-list">
+              <div class="comment-empty" id="comment-empty">Noch keine Notiz zu diesem Foto.</div>
+            </div>
+            <div class="comment-input-wrap">
+              <textarea
+                class="comment-input"
+                id="comment-input"
+                placeholder="Erinnerung hinzufuegen..."
+                rows="2"
+                maxlength="300"
+                aria-label="Kommentar eingeben"
+              ></textarea>
+              <button class="comment-submit" id="comment-submit" aria-label="Senden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Weltkarte -->
+      <section class="view" id="view-weltkarte" data-view="weltkarte" aria-label="Weltkarte aller besuchten Orte">
+
+        <div class="map-container">
+          <div id="leaflet-map" aria-label="Interaktive Weltkarte"></div>
+          <div class="map-overlay" id="map-overlay">
+            <div class="map-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="color:var(--c-gold)">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <strong id="map-location-count">0</strong> besuchte Orte
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ======================================================
+         BOTTOM NAVIGATION
+    ====================================================== -->
+    <nav class="bottom-nav" role="navigation" aria-label="Hauptnavigation">
+
+      <button class="nav-item is-active" data-target="reise" aria-current="page" aria-label="Aktuelle Reise">
+        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span class="nav-item__label">Reise</span>
+      </button>
+
+      <button class="nav-item" data-target="checkliste" aria-label="Checkliste">
+        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span class="nav-item__label">Packliste</span>
+      </button>
+
+      <button class="nav-item" data-target="tresor" aria-label="Dokument-Tresor">
+        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          <circle cx="12" cy="16" r="1" fill="currentColor"/>
+        </svg>
+        <span class="nav-item__label">Tresor</span>
+      </button>
+
+      <button class="nav-item" data-target="weltkarte" aria-label="Weltkarte">
+        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span class="nav-item__label">Weltkarte</span>
+      </button>
+
+      <button class="nav-item" data-target="archiv" aria-label="Archiv">
+        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        </svg>
+        <span class="nav-item__label">Archiv</span>
+      </button>
+
+    </nav>
+
+    <!-- ======================================================
+         TOAST-CONTAINER
+    ====================================================== -->
+    <div id="toast-container" role="alert" aria-live="polite" aria-atomic="false"></div>
+
+
+    <!-- ======================================================
+         EINSTELLUNGS-OVERLAY
+    ====================================================== -->
+    <div class="settings-overlay" id="settings-overlay" role="dialog"
+      aria-modal="true" aria-label="Einstellungen">
+      <div class="settings-sheet" id="settings-sheet">
+        <div class="settings-handle" aria-hidden="true"></div>
+
+        <div class="settings-header">
+          <h2 class="settings-header__title">Einstellungen</h2>
+          <button class="icon-btn" id="settings-close" aria-label="Schliessen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="settings-body">
+
+          <!-- SEKTION: OneDrive -->
+          <div class="settings-section">
+            <div class="settings-section__title">OneDrive-Verbindung</div>
+
+            <div class="settings-row">
+              <div class="settings-row__icon">
+                <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+                  <path d="M18.8 13.2c.9-2.1 3-3.5 5.3-3.5 3.3 0 6 2.7 6 6s-2.7 6-6 6H8.5C5.5 21.7 3 19.2 3 16.2c0-2.7 1.9-5 4.5-5.6.4-3.2 3.1-5.6 6.4-5.6 2.2 0 4.2 1.1 5.4 2.8l-.5 5.4z"/>
+                </svg>
+              </div>
+              <div class="settings-row__body">
+                <div class="settings-row__label">Azure App Client-ID</div>
+                <div class="settings-row__desc">
+                  Deine Microsoft Azure Anwendungs-ID fuer den OneDrive-Zugriff.
+                </div>
+                <div class="settings-input-wrap">
+                  <input
+                    class="settings-input"
+                    id="settings-client-id"
+                    type="text"
+                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                    spellcheck="false"
+                    autocomplete="off"
+                    maxlength="40"
+                    aria-label="Azure Client-ID"
+                  />
+                  <button class="btn-primary" id="settings-save-id" style="padding:10px 18px;font-size:12px;flex-shrink:0;">
+                    Speichern
+                  </button>
+                </div>
+                <div id="settings-id-status"></div>
+
+                <!-- Schritt-fuer-Schritt Anleitung -->
+                <div id="settings-setup-guide" style="margin-top:12px;">
+                  <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--c-text-muted);margin-bottom:8px;">
+                    Azure App einrichten
+                  </div>
+                  <div class="setup-steps">
+                    <div class="setup-step">
+                      <div class="setup-step__num">1</div>
+                      <div class="setup-step__text">
+                        Gehe zu <a href="https://portal.azure.com" target="_blank" rel="noopener" style="color:var(--c-gold);">portal.azure.com</a>
+                        und melde dich mit deinem Microsoft-Konto an.
+                      </div>
+                    </div>
+                    <div class="setup-step">
+                      <div class="setup-step__num">2</div>
+                      <div class="setup-step__text">
+                        <strong>App-Registrierungen</strong> &rarr; <strong>Neue Registrierung</strong><br>
+                        Name: <code>GlobeTrotter SQL</code><br>
+                        Kontotyp: <strong>Persoenliche Microsoft-Konten</strong>
+                      </div>
+                    </div>
+                    <div class="setup-step">
+                      <div class="setup-step__num">3</div>
+                      <div class="setup-step__text">
+                        <strong>Authentifizierung</strong> &rarr; Plattform hinzufuegen &rarr; <strong>Single-page application</strong><br>
+                        Redirect-URI: <code id="settings-redirect-uri"></code>
+                      </div>
+                    </div>
+                    <div class="setup-step">
+                      <div class="setup-step__num">4</div>
+                      <div class="setup-step__text">
+                        <strong>API-Berechtigungen</strong> &rarr; Berechtigung hinzufuegen &rarr; Microsoft Graph<br>
+                        Delegiert: <code>Files.Read</code> und <code>User.Read</code>
+                      </div>
+                    </div>
+                    <div class="setup-step">
+                      <div class="setup-step__num">5</div>
+                      <div class="setup-step__text">
+                        Auf der Uebersichtsseite die <strong>Anwendungs-ID (Client-ID)</strong> kopieren
+                        und oben eintragen.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- SEKTION: App-Einstellungen -->
+          <div class="settings-section">
+            <div class="settings-section__title">App-Einstellungen</div>
+
+            <div class="settings-toggle-row">
+              <div>
+                <div class="settings-toggle-label">Haptisches Feedback</div>
+                <div class="settings-toggle-sub">Vibration beim Abtippen der Checkliste</div>
+              </div>
+              <div class="toggle-switch is-on" id="toggle-haptic" role="switch" aria-checked="true" tabindex="0"></div>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div>
+                <div class="settings-toggle-label">Offline-Karten cachen</div>
+                <div class="settings-toggle-sub">Kartenkacheln lokal speichern (bis zu 50 MB)</div>
+              </div>
+              <div class="toggle-switch is-on" id="toggle-maps" role="switch" aria-checked="true" tabindex="0"></div>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div>
+                <div class="settings-toggle-label">Standard-Packliste</div>
+                <div class="settings-toggle-sub">Vordefinierte Eintraege bei neuer Reise</div>
+              </div>
+              <div class="toggle-switch is-on" id="toggle-defaults" role="switch" aria-checked="true" tabindex="0"></div>
+            </div>
+          </div>
+
+          <!-- SEKTION: Lokale Daten -->
+          <div class="settings-section">
+            <div class="settings-section__title">Gespeicherte Daten</div>
+            <div class="data-stats" id="settings-data-stats">
+              <div class="data-stat">
+                <div class="data-stat__value" id="stat-docs">0</div>
+                <div class="data-stat__label">Dokumente</div>
+              </div>
+              <div class="data-stat">
+                <div class="data-stat__value" id="stat-checklist">0</div>
+                <div class="data-stat__label">Checkliste</div>
+              </div>
+              <div class="data-stat">
+                <div class="data-stat__value" id="stat-locations">0</div>
+                <div class="data-stat__label">Orte</div>
+              </div>
+              <div class="data-stat">
+                <div class="data-stat__value" id="stat-comments">0</div>
+                <div class="data-stat__label">Kommentare</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SEKTION: Info -->
+          <div class="settings-section">
+            <div class="settings-section__title">Ueber die App</div>
+            <div class="settings-info">
+              <strong style="color:var(--c-gold);">GlobeTrotter SQL</strong> v1.0.0<br>
+              Persoenlicher Reisebegleiter von <strong>W &amp; B</strong><br>
+              Offline-First PWA &middot; Kein Cloud-Zwang &middot; Deine Daten gehoeren dir.<br><br>
+              Service Worker: <span id="settings-sw-status">wird geprueft...</span>
+            </div>
+          </div>
+
+          <!-- SEKTION: Gefahrenzone -->
+          <div class="settings-section">
+            <div class="settings-section__title" style="color:rgba(216,74,111,0.6);">Daten loeschen</div>
+            <button class="danger-btn" id="settings-clear-checklist">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+              </svg>
+              Checkliste zuruecksetzen
+            </button>
+            <button class="danger-btn" id="settings-clear-all" style="margin-top:4px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+              </svg>
+              Alle lokalen Daten loeschen
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+  </div><!-- /#app -->
+
+  <!-- ======================================================
+       HAUPT-JAVASCRIPT
+  ====================================================== -->
+  <script type="module">
+    /**
+     * GlobeTrotter SQL - Haupt-App-Logik
+     */
+
+    // ----------------------------------------------------------------
+    // SERVICE WORKER REGISTRIERUNG
+    // ----------------------------------------------------------------
+    async function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) {
+        console.info('[SW] Service Worker nicht verfuegbar in dieser Umgebung.');
+        return;
+      }
+
+      // SW benoetigt HTTPS oder localhost - bei file:// oder Claude-Preview ueberspringen
+      const protocol = location.protocol;
+      const host = location.hostname;
+      const isSupportedContext =
+        protocol === 'https:' ||
+        host === 'localhost' ||
+        host === '127.0.0.1';
+
+      if (!isSupportedContext) {
+        console.info('[SW] Kein Service Worker: Benoetigt HTTPS oder localhost. Aktuell:', protocol + '//' + host);
+        return;
+      }
+
+      try {
+        const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+        console.log('[SW] Registriert. Scope:', reg.scope);
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showToast('Update verfuegbar. Seite neu laden.', 'info');
+            }
+          });
+        });
+
+        if ('SyncManager' in window) {
+          navigator.serviceWorker.ready.then(() => {
+            console.info('[SW] Background Sync verfuegbar.');
+          });
+        }
+
+      } catch (err) {
+        // "non app-bound domain" = iOS-Einschraenkung bei nicht-installierten PWAs
+        // App funktioniert trotzdem vollstaendig, nur ohne Offline-Cache
+        const isKnownIOSLimit = err.message?.includes('non app-bound') ||
+                                err.message?.includes('app-bound') ||
+                                err.name === 'SecurityError';
+
+        if (isKnownIOSLimit) {
+          console.info('[SW] iOS: Service Worker auf dieser Domain nicht erlaubt. App laeuft ohne Offline-Cache.');
+        } else {
+          console.warn('[SW] Registrierung fehlgeschlagen (nicht kritisch):', err.message);
+        }
+        // In beiden Faellen: App laeuft normal weiter
+      }
+    }
+
+    // ----------------------------------------------------------------
+    // ONLINE/OFFLINE STATUS
+    // ----------------------------------------------------------------
+    const statusPill  = document.getElementById('status-pill');
+    const statusLabel = document.getElementById('status-label');
+
+    function updateNetworkStatus() {
+      const online = navigator.onLine;
+      statusPill.classList.toggle('is-online', online);
+      statusLabel.textContent = online ? 'Online' : 'Offline';
+    }
+
+    window.addEventListener('online',  () => {
+      updateNetworkStatus();
+      showToast('Verbindung wiederhergestellt.', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+      updateNetworkStatus();
+      showToast('Kein Netzwerk. Offline-Modus aktiv.', 'info');
+    });
+
+    updateNetworkStatus();
+
+    // ----------------------------------------------------------------
+    // ROUTER: Hash-basierte Navigation
+    // ----------------------------------------------------------------
+    const views   = document.querySelectorAll('.view');
+    const navBtns = document.querySelectorAll('.nav-item');
+
+    function navigateTo(targetId, pushState = true) {
+      // View Transitions API nutzen wenn verfuegbar
+      const doTransition = () => {
+        views.forEach((v) => {
+          const isTarget = v.dataset.view === targetId;
+          v.classList.toggle('is-active', isTarget);
+          v.setAttribute('aria-hidden', String(!isTarget));
+        });
+
+        navBtns.forEach((btn) => {
+          const isActive = btn.dataset.target === targetId;
+          btn.classList.toggle('is-active', isActive);
+          btn.setAttribute('aria-current', isActive ? 'page' : 'false');
+        });
+
+        if (pushState) {
+          history.pushState({ view: targetId }, '', `#${targetId}`);
+        }
+
+        // Lazy: Karte initialisieren wenn Weltkarte erstmals geoeffnet
+        if (targetId === 'weltkarte' && !window._mapInitialized) {
+          initWorldMap();
+        }
+      };
+
+      if ('startViewTransition' in document) {
+        document.startViewTransition(doTransition);
+      } else {
+        doTransition();
+      }
+    }
+
+    navBtns.forEach((btn) => {
+      btn.addEventListener('click', () => navigateTo(btn.dataset.target));
+    });
+
+    // Hash-Navigation bei Seitenaufruf
+    window.addEventListener('popstate', (e) => {
+      const target = e.state?.view || 'reise';
+      navigateTo(target, false);
+    });
+
+    // Initiale Route
+    const initView = window.location.hash.replace('#', '') || 'reise';
+    navigateTo(initView, false);
+
+    // Dashboard-Karten als Navigation
+    document.querySelectorAll('[data-action]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const action = el.dataset.action;
+        if (action === 'open-checklist') navigateTo('checkliste');
+        if (action === 'open-map') navigateTo('weltkarte');
+      });
+    });
+
+    // ----------------------------------------------------------------
+    // TOAST-SYSTEM
+    // ----------------------------------------------------------------
+    const toastContainer = document.getElementById('toast-container');
+
+    const TOAST_ICONS = {
+      success: `<svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>`,
+      error:   `<svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M15 9 9 15M9 9l6 6"/></svg>`,
+      info:    `<svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>`,
+    };
+
+    window.showToast = function(message, type = 'info', duration = 3500) {
+      const toast = document.createElement('div');
+      toast.className = `toast toast--${type}`;
+      toast.innerHTML = `${TOAST_ICONS[type] || TOAST_ICONS.info}<span>${message}</span>`;
+
+      toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('is-leaving');
+        toast.addEventListener('animationend', () => toast.remove());
+      }, duration);
+    };
+
+    // ----------------------------------------------------------------
+    // LEAFLET WELTKARTE
+    // ----------------------------------------------------------------
+    window._mapInitialized = false;
+
+    async function initWorldMap() {
+      window._mapInitialized = true;
+
+      if (typeof L === 'undefined') {
+        showToast('Leaflet konnte nicht geladen werden.', 'error');
+        return;
+      }
+
+      const map = L.map('leaflet-map', {
+        center: [20, 0],
+        zoom: 2,
+        zoomControl: false,
+        attributionControl: true,
+      });
+
+      // OpenStreetMap Tiles mit Dark-Mode-Filter (via CSS oben)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18,
+      }).addTo(map);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // Gespeicherte Orte aus IDB laden
+      try {
+        const { getAllLocations } = await import('/js/db.js');
+        const locations = await getAllLocations();
+
+        // Custom Marker-Icon
+        const goldIcon = L.divIcon({
+          className: '',
+          html: `<div style="
+            width:12px;height:12px;
+            background:${getComputedStyle(document.documentElement).getPropertyValue('--c-gold').trim()};
+            border-radius:50%;
+            box-shadow:0 0 12px rgba(201,168,76,0.6);
+            border:2px solid rgba(255,255,255,0.3);
+          "></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+        });
+
+        locations.forEach((loc) => {
+          if (loc.lat && loc.lng) {
+            L.marker([loc.lat, loc.lng], { icon: goldIcon })
+              .addTo(map)
+              .bindPopup(`
+                <strong style="font-family:Cormorant Garamond,serif;font-size:16px;">${loc.name || 'Unbekannt'}</strong><br>
+                <small style="color:#8080a0;">${loc.country || ''} &middot; ${loc.visitedAt ? new Date(loc.visitedAt).toLocaleDateString('de-DE') : ''}</small>
+                ${loc.notes ? `<p style="margin-top:6px;font-size:13px;">${loc.notes}</p>` : ''}
+              `);
+          }
+        });
+
+        document.getElementById('map-location-count').textContent =
+          locations.length.toLocaleString('de-DE');
+
+      } catch (err) {
+        console.warn('[Map] Orte konnten nicht geladen werden:', err);
+      }
+
+      window._leafletMap = map;
+    }
+
+    // ----------------------------------------------------------------
+    // PWA INSTALL PROMPT (A2HS)
+    // ----------------------------------------------------------------
+    let deferredPrompt = null;
+    const installBanner = document.getElementById('install-banner');
+    const btnInstall    = document.getElementById('btn-install');
+    const btnDismiss    = document.getElementById('btn-install-dismiss');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.classList.add('is-visible');
+    });
+
+    btnInstall?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('GlobeTrotter SQL wird installiert...', 'success');
+      }
+      deferredPrompt = null;
+      installBanner.classList.remove('is-visible');
+    });
+
+    btnDismiss?.addEventListener('click', () => {
+      installBanner.classList.remove('is-visible');
+      deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBanner.classList.remove('is-visible');
+      showToast('Erfolgreich installiert!', 'success');
+    });
+
+
+    // ----------------------------------------------------------------
+    // CHECKLISTE: Vollstaendige Logik mit Vibration API + IDB
+    // ----------------------------------------------------------------
+
+    // Standard-Kategorien mit Metadaten
+    const CATEGORIES = {
+      dokumente:  { label: 'Dokumente',  icon: '&#128196;', order: 0 },
+      kleidung:   { label: 'Kleidung',   icon: '&#128084;', order: 1 },
+      technik:    { label: 'Technik',    icon: '&#128241;', order: 2 },
+      gesundheit: { label: 'Gesundheit', icon: '&#128138;', order: 3 },
+      sonstiges:  { label: 'Sonstiges',  icon: '&#128230;', order: 4 },
+    };
+
+    // Standard-Packliste (wird beim ersten Start eingetragen)
+    const DEFAULT_ITEMS = [
+      { text: 'Reisepass / Personalausweis', category: 'dokumente', priority: 'high' },
+      { text: 'Flugtickets', category: 'dokumente', priority: 'high' },
+      { text: 'Hotelbuchung', category: 'dokumente', priority: 'high' },
+      { text: 'Reiseversicherung', category: 'dokumente', priority: 'medium' },
+      { text: 'Krankenversicherungskarte', category: 'dokumente', priority: 'medium' },
+      { text: 'Ladekabel Smartphone', category: 'technik', priority: 'high' },
+      { text: 'Powerbank', category: 'technik', priority: 'medium' },
+      { text: 'Kopfhoerer', category: 'technik', priority: 'low' },
+      { text: 'Adapter / Reisestecker', category: 'technik', priority: 'medium' },
+      { text: 'Zahnbuerste / Zahnpasta', category: 'gesundheit', priority: 'high' },
+      { text: 'Sonnencreme', category: 'gesundheit', priority: 'medium' },
+      { text: 'Hausapotheke', category: 'gesundheit', priority: 'medium' },
+      { text: 'Unterwaesche (7x)', category: 'kleidung', priority: 'high' },
+      { text: 'T-Shirts (5x)', category: 'kleidung', priority: 'high' },
+      { text: 'Hose / Shorts', category: 'kleidung', priority: 'high' },
+      { text: 'Badezeug', category: 'kleidung', priority: 'medium' },
+      { text: 'Bequeme Schuhe', category: 'kleidung', priority: 'medium' },
+      { text: 'Bargeld / Kreditkarte', category: 'sonstiges', priority: 'high' },
+      { text: 'Schloss fuer Gepaeck', category: 'sonstiges', priority: 'low' },
+    ];
+
+    // Vibration-Muster (Vibration API)
+    const VIBRATE = {
+      check:    [30],           // kurz: abgehakt
+      uncheck:  [10, 20, 10],   // doppelt: wieder offen
+      add:      [20, 10, 20],   // doppelt-kurz: neu hinzugefuegt
+      delete:   [15, 10, 40],   // kurz-lang: geloescht
+      allDone:  [50, 30, 80],   // Triumph: alles erledigt
+      error:    [100],          // lang: Fehler
+    };
+
+    function vibrate(pattern) {
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate(pattern); } catch {}
+      }
+    }
+
+    // In-Memory Store (wird aus IDB geladen)
+    let checklistItems = [];
+    let activeFilter   = 'all';
+    let dbReady        = false;
+
+    // IDB-Zugriff (db.js wird als Modul geladen wenn verfuegbar)
+    // Fallback: localStorage fuer Umgebungen ohne Modul-Support
+    const Store = {
+      async load() {
+        try {
+          // Versuche IDB-Modul
+          const { getChecklistByTrip, getAllTrips } = await import('./js/db.js');
+          const trips = await getAllTrips();
+          const tripId = trips[0]?.id || 0;
+          const items  = await getChecklistByTrip(tripId);
+          dbReady = true;
+          return items.length > 0 ? items : null;
+        } catch {
+          // Fallback: localStorage
+          try {
+            const raw = localStorage.getItem('gt_checklist');
+            return raw ? JSON.parse(raw) : null;
+          } catch { return null; }
+        }
+      },
+
+      async save(items) {
+        if (dbReady) {
+          try {
+            const { saveChecklistItem } = await import('./js/db.js');
+            for (const item of items) {
+              await saveChecklistItem(item);
+            }
+            return;
+          } catch {}
+        }
+        try {
+          localStorage.setItem('gt_checklist', JSON.stringify(items));
+        } catch {}
+      },
+
+      async saveOne(item) {
+        if (dbReady) {
+          try {
+            const { saveChecklistItem } = await import('./js/db.js');
+            await saveChecklistItem(item);
+            return;
+          } catch {}
+        }
+        // localStorage: komplette Liste neu schreiben
+        await this.save(checklistItems);
+      },
+
+      async deleteOne(id) {
+        if (dbReady) {
+          try {
+            const { deleteChecklistItem } = await import('./js/db.js');
+            await deleteChecklistItem(id);
+            return;
+          } catch {}
+        }
+        await this.save(checklistItems);
+      },
+    };
+
+    // UI-Elemente
+    const clList     = document.getElementById('cl-list');
+    const clPercent  = document.getElementById('cl-percent');
+    const clSummary  = document.getElementById('cl-summary');
+    const clRingFill = document.getElementById('cl-ring-fill');
+    const clAllDone  = document.getElementById('cl-all-done');
+    const clNewInput = document.getElementById('cl-new-input');
+    const clNewCat   = document.getElementById('cl-new-cat');
+    const clAddBtn   = document.getElementById('cl-add-btn');
+    const clResetBtn = document.getElementById('cl-reset-btn');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+
+    // Fortschritts-Ring aktualisieren
+    function updateProgress() {
+      const total = checklistItems.length;
+      const done  = checklistItems.filter(i => i.done).length;
+      const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+      const circumference = 2 * Math.PI * 34; // r=34
+
+      clPercent.textContent = pct;
+      clRingFill.style.strokeDashoffset = circumference - (circumference * pct / 100);
+
+      if (total === 0) {
+        clSummary.textContent = 'Noch nichts hinzugefuegt';
+      } else {
+        clSummary.textContent = done + ' von ' + total + ' erledigt';
+      }
+
+      // Dashboard-Karte aktualisieren
+      const progressText = document.getElementById('checklist-progress-text');
+      const progressBar  = document.getElementById('checklist-progress-bar');
+      if (progressText) progressText.textContent = done + ' / ' + total;
+      if (progressBar)  progressBar.style.width  = pct + '%';
+
+      // Alle-erledigt Zustand
+      const allDone = total > 0 && done === total;
+      clAllDone.classList.toggle('is-visible', allDone);
+    }
+
+    // Item-Element erzeugen
+    function createItemEl(item) {
+      const filteredOut = !matchesFilter(item);
+
+      const el = document.createElement('div');
+      el.className = 'checklist-item' + (item.done ? ' is-done' : '');
+      el.setAttribute('role', 'listitem');
+      el.dataset.id = item.id;
+      if (filteredOut) el.style.display = 'none';
+
+      el.innerHTML =
+        '<div class="checklist-item__delete-bg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div>' +
+        '<div class="checklist-checkbox" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>' +
+        '</div>' +
+        '<div class="checklist-item__body">' +
+          '<div class="checklist-item__text">' + escapeHtml(item.text) + '</div>' +
+          (item.note ? '<div class="checklist-item__note">' + escapeHtml(item.note) + '</div>' : '') +
+        '</div>' +
+        '<span class="priority-dot priority-dot--' + (item.priority || 'low') + '" aria-hidden="true"></span>';
+
+      // Antippen: Toggle
+      el.addEventListener('click', () => toggleItem(item.id, el));
+
+      // Long-Press / Swipe: Loeschen
+      setupSwipeDelete(el, item.id);
+
+      return el;
+    }
+
+    // HTML escapen
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Filter pruefen
+    function matchesFilter(item) {
+      switch (activeFilter) {
+        case 'all':       return true;
+        case 'offen':     return !item.done;
+        case 'done':      return !!item.done;
+        default:          return item.category === activeFilter;
+      }
+    }
+
+    // Liste rendern
+    function renderList() {
+      clList.innerHTML = '';
+
+      // Nach Kategorien gruppieren
+      const grouped = {};
+      for (const cat of Object.keys(CATEGORIES)) grouped[cat] = [];
+
+      for (const item of checklistItems) {
+        const cat = item.category || 'sonstiges';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(item);
+      }
+
+      let visibleCount = 0;
+
+      for (const [catKey, catMeta] of Object.entries(CATEGORIES)) {
+        const items = grouped[catKey] || [];
+        const visibleItems = items.filter(i => matchesFilter(i));
+        if (visibleItems.length === 0) continue;
+
+        visibleCount += visibleItems.length;
+
+        // Kategorie-Header
+        const header = document.createElement('div');
+        header.className = 'checklist-category-header';
+        header.innerHTML =
+          '<span class="checklist-category-icon">' + catMeta.icon + '</span>' +
+          '<span class="checklist-category-name">' + catMeta.label + '</span>' +
+          '<span class="checklist-category-count">' +
+            items.filter(i => i.done).length + '/' + items.length +
+          '</span>';
+        clList.appendChild(header);
+
+        // Items der Kategorie
+        for (const item of items) {
+          clList.appendChild(createItemEl(item));
+        }
+      }
+
+      // Leerer Zustand (wenn gefiltert nichts uebrig bleibt)
+      if (visibleCount === 0 && checklistItems.length > 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'text-align:center;padding:40px 20px;color:var(--c-text-muted);font-size:13px;';
+        empty.textContent = 'Keine Eintraege fuer diesen Filter.';
+        clList.appendChild(empty);
+      }
+
+      updateProgress();
+    }
+
+    // Item toggeln
+    async function toggleItem(id, el) {
+      const item = checklistItems.find(i => i.id === id);
+      if (!item) return;
+
+      item.done = !item.done;
+      item.updatedAt = new Date().toISOString();
+
+      // Vibration
+      vibrate(item.done ? VIBRATE.check : VIBRATE.uncheck);
+
+      // UI sofort aktualisieren
+      el.classList.toggle('is-done', item.done);
+      el.classList.add('just-checked');
+      setTimeout(() => el.classList.remove('just-checked'), 400);
+
+      // Wenn Filter "offen" aktiv: Element ausblenden
+      if (activeFilter === 'offen' && item.done) {
+        el.style.opacity = '0.4';
+        setTimeout(() => { el.style.display = 'none'; }, 300);
+      }
+
+      updateProgress();
+
+      // Alle erledigt?
+      const allDone = checklistItems.every(i => i.done);
+      if (allDone && item.done) {
+        setTimeout(() => vibrate(VIBRATE.allDone), 200);
+      }
+
+      // IDB speichern
+      await Store.saveOne(item);
+    }
+
+    // Item loeschen (nach Swipe oder Long-Press)
+    async function deleteItem(id, el) {
+      vibrate(VIBRATE.delete);
+
+      el.classList.add('is-removing');
+      setTimeout(async () => {
+        el.remove();
+        checklistItems = checklistItems.filter(i => i.id !== id);
+        updateProgress();
+        await Store.deleteOne(id);
+        // Kategorie-Header entfernen wenn leer
+        renderList();
+      }, 300);
+
+      showToast('Eintrag geloescht', 'info', 2000);
+    }
+
+    // Swipe-to-Delete (Touch)
+    function setupSwipeDelete(el, id) {
+      let startX = 0;
+      let currentX = 0;
+      let isDragging = false;
+      const deleteBg = el.querySelector('.checklist-item__delete-bg');
+
+      el.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = false;
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        currentX = e.touches[0].clientX;
+        const dx = startX - currentX;
+        if (dx > 10) {
+          isDragging = true;
+          const translateX = Math.max(0, Math.min(dx, 90));
+          el.style.transform = 'translateX(-' + translateX + 'px)';
+          if (deleteBg) deleteBg.style.opacity = String(translateX / 90);
+        }
+      }, { passive: true });
+
+      el.addEventListener('touchend', () => {
+        const dx = startX - currentX;
+        if (isDragging && dx > 70) {
+          // Schwelle erreicht: loeschen
+          deleteItem(id, el);
+        } else {
+          // Zuruecksetzen
+          el.style.transform = '';
+          if (deleteBg) deleteBg.style.opacity = '0';
+        }
+        isDragging = false;
+      });
+
+      // Long-Press fuer Desktop (500ms)
+      let longPressTimer;
+      el.addEventListener('mousedown', () => {
+        longPressTimer = setTimeout(() => {
+          if (confirm('Eintrag "' + el.querySelector('.checklist-item__text')?.textContent + '" loeschen?')) {
+            deleteItem(id, el);
+          }
+        }, 600);
+      });
+      el.addEventListener('mouseup',   () => clearTimeout(longPressTimer));
+      el.addEventListener('mouseleave',() => clearTimeout(longPressTimer));
+    }
+
+    // Neuen Eintrag hinzufuegen
+    async function addItem() {
+      const text = clNewInput.value.trim();
+      if (!text) {
+        vibrate(VIBRATE.error);
+        clNewInput.focus();
+        return;
+      }
+
+      const newItem = {
+        id:        Date.now(),
+        text,
+        category:  clNewCat.value || 'sonstiges',
+        priority:  'medium',
+        done:      false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        tripId:    0,
+      };
+
+      checklistItems.push(newItem);
+      vibrate(VIBRATE.add);
+      clNewInput.value = '';
+      renderList();
+      await Store.saveOne(newItem);
+
+      // Scroll zu neuem Item
+      setTimeout(() => {
+        const newEl = clList.querySelector('[data-id="' + newItem.id + '"]');
+        if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
+
+    // Filter setzen
+    function setFilter(filter) {
+      activeFilter = filter;
+      filterTabs.forEach(tab => {
+        tab.classList.toggle('is-active', tab.dataset.filter === filter);
+      });
+      renderList();
+    }
+
+    // Alle zuruecksetzen
+    async function resetAll() {
+      if (!confirm('Alle ' + checklistItems.filter(i => i.done).length + ' erledigten Eintraege wieder oeffnen?')) return;
+      checklistItems.forEach(i => {
+        i.done = false;
+        i.updatedAt = new Date().toISOString();
+      });
+      await Store.save(checklistItems);
+      renderList();
+    }
+
+    // Checkliste initialisieren
+    async function initChecklist() {
+      const saved = await Store.load();
+
+      if (saved && saved.length > 0) {
+        checklistItems = saved;
+      } else {
+        // Standard-Packliste eintragen
+        checklistItems = DEFAULT_ITEMS.map((item, i) => ({
+          ...item,
+          id:        Date.now() + i,
+          done:      false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          tripId:    0,
+        }));
+        await Store.save(checklistItems);
+      }
+
+      renderList();
+    }
+
+    // Event-Listener
+    clAddBtn?.addEventListener('click', addItem);
+    clNewInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addItem(); }
+    });
+    clResetBtn?.addEventListener('click', resetAll);
+
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => setFilter(tab.dataset.filter));
+    });
+
+    // Checklist beim Oeffnen des Views initialisieren (lazy)
+    let checklistInitialized = false;
+
+    // Router-Hook: Checkliste beim ersten Oeffnen laden
+    const origNavigateTo = window._navigateTo;
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.target === 'checkliste' && !checklistInitialized) {
+          checklistInitialized = true;
+          initChecklist();
+        }
+      });
+    });
+
+    // Falls direkt ueber Hash geoeffnet
+    if (location.hash === '#checkliste') {
+      checklistInitialized = true;
+      initChecklist();
+    }
+
+
+
+    // ================================================================
+    // DOKUMENT-TRESOR: Vollstaendige Logik
+    // PDF + Bild-Upload, IndexedDB-Blob-Speicherung, Viewer-Modal
+    // ================================================================
+
+    const DOC_TYPES = {
+      ticket:    { label: 'Ticket',       badge: 'doc-type-badge--ticket' },
+      hotel:     { label: 'Hotel',        badge: 'doc-type-badge--hotel' },
+      insurance: { label: 'Versicherung', badge: 'doc-type-badge--insurance' },
+      visa:      { label: 'Visa',         badge: 'doc-type-badge--visa' },
+      other:     { label: 'Sonstiges',    badge: 'doc-type-badge--other' },
+    };
+
+    // In-Memory Dokumentenliste (Metadaten, Blobs bleiben in IDB/localStorage)
+    let documents       = [];
+    let activeDocFilter = 'all';
+    let currentModalDoc = null;
+    let tresorInitialized = false;
+
+    // Blob-Speicher: IDB bevorzugt, localStorage-Fallback fuer kleine Dateien
+    const DocStore = {
+      // Metadaten ohne Blob laden
+      async loadMeta() {
+        try {
+          const raw = localStorage.getItem('gt_docs_meta');
+          return raw ? JSON.parse(raw) : [];
+        } catch { return []; }
+      },
+
+      async saveMeta(docs) {
+        const meta = docs.map(d => ({ ...d, blob: undefined, dataUrl: undefined }));
+        try { localStorage.setItem('gt_docs_meta', JSON.stringify(meta)); } catch {}
+      },
+
+      // Blob per IDB speichern
+      async saveBlob(id, blob) {
+        try {
+          const { openDB } = await import('./js/db.js');
+          const db = await openDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction('documents', 'readwrite');
+            tx.objectStore('documents').put({ id, blob, savedAt: new Date().toISOString() });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => reject(tx.error);
+          });
+        } catch {
+          // Fallback: DataURL in localStorage (nur kleine Dateien < 2 MB)
+          return false;
+        }
+      },
+
+      async loadBlob(id) {
+        try {
+          const { openDB } = await import('./js/db.js');
+          const db = await openDB();
+          return new Promise((resolve) => {
+            const req = db.transaction('documents').objectStore('documents').get(id);
+            req.onsuccess = () => resolve(req.result?.blob || null);
+            req.onerror  = () => resolve(null);
+          });
+        } catch { return null; }
+      },
+
+      async deleteBlob(id) {
+        try {
+          const { openDB } = await import('./js/db.js');
+          const db = await openDB();
+          return new Promise((resolve) => {
+            const tx = db.transaction('documents', 'readwrite');
+            tx.objectStore('documents').delete(id);
+            tx.oncomplete = () => resolve(true);
+            tx.onerror    = () => resolve(false);
+          });
+        } catch { return false; }
+      },
+    };
+
+    // Dateigroesse formatieren
+    function formatBytes(bytes) {
+      if (bytes < 1024)        return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' kB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    // Datum formatieren (deutsches Format)
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+      });
+    }
+
+    // Typ aus Dateiname raten
+    function guessDocType(name) {
+      const lower = name.toLowerCase();
+      if (lower.includes('ticket') || lower.includes('boarding') || lower.includes('flug') || lower.includes('bahn')) return 'ticket';
+      if (lower.includes('hotel') || lower.includes('buchung') || lower.includes('reserv'))  return 'hotel';
+      if (lower.includes('versich') || lower.includes('insurance') || lower.includes('police')) return 'insurance';
+      if (lower.includes('visa') || lower.includes('visum')) return 'visa';
+      return 'other';
+    }
+
+    // Dokument-Karte rendern
+    function createDocCard(doc) {
+      const el = document.createElement('div');
+      el.className = 'doc-card';
+      el.setAttribute('role', 'listitem');
+      el.dataset.docId = doc.id;
+
+      const typeMeta = DOC_TYPES[doc.type] || DOC_TYPES.other;
+      const isPdf = doc.mimeType === 'application/pdf';
+
+      const previewHtml = doc.thumbnailUrl
+        ? '<img src="' + doc.thumbnailUrl + '" alt="Vorschau" loading="lazy" />'
+        : '<svg class="doc-card__preview-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" width="40" height="40"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' +
+          (isPdf ? '<text x="6" y="19" font-size="5" fill="currentColor" stroke="none">PDF</text>' : '') +
+          '</svg>';
+
+      el.innerHTML =
+        '<div class="doc-card__preview">' +
+          previewHtml +
+          '<span class="doc-type-badge ' + typeMeta.badge + '">' + typeMeta.label + '</span>' +
+          '<button class="doc-card__delete" data-doc-id="' + doc.id + '" aria-label="Loeschen">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div class="doc-card__info">' +
+          '<div class="doc-card__name">' + escapeHtml(doc.name) + '</div>' +
+          '<div class="doc-card__meta">' + formatBytes(doc.size) + ' &middot; ' + formatDate(doc.savedAt) + '</div>' +
+        '</div>';
+
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.doc-card__delete')) return;
+        openDocModal(doc);
+      });
+
+      el.querySelector('.doc-card__delete')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteDocument(doc.id);
+      });
+
+      return el;
+    }
+
+    // Grid rendern
+    function renderDocGrid() {
+      const grid   = document.getElementById('doc-grid');
+      const empty  = document.getElementById('doc-empty');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const filtered = activeDocFilter === 'all'
+        ? documents
+        : documents.filter(d => d.type === activeDocFilter);
+
+      empty.style.display = filtered.length === 0 ? 'flex' : 'none';
+
+      filtered.forEach(doc => grid.appendChild(createDocCard(doc)));
+
+      // Tab-Zaehler aktualisieren
+      document.getElementById('cnt-all').textContent       = documents.length;
+      document.getElementById('cnt-ticket').textContent    = documents.filter(d => d.type === 'ticket').length;
+      document.getElementById('cnt-hotel').textContent     = documents.filter(d => d.type === 'hotel').length;
+      document.getElementById('cnt-insurance').textContent = documents.filter(d => d.type === 'insurance').length;
+      document.getElementById('cnt-visa').textContent      = documents.filter(d => d.type === 'visa').length;
+      document.getElementById('cnt-other').textContent     = documents.filter(d => d.type === 'other').length;
+
+      // Storage-Anzeige
+      const totalSize = documents.reduce((s, d) => s + (d.size || 0), 0);
+      document.getElementById('storage-value').textContent =
+        documents.length + ' Dok. &middot; ' + formatBytes(totalSize);
+
+      // Dashboard-Karte
+      const docCountEl = document.getElementById('doc-count');
+      if (docCountEl) docCountEl.textContent = documents.length;
+    }
+
+    // Datei-Upload verarbeiten
+    async function handleFiles(files) {
+      const uploadProgress    = document.getElementById('upload-progress');
+      const uploadProgressBar = document.getElementById('upload-progress-bar');
+      const uploadLabel       = document.getElementById('upload-progress-label');
+
+      if (!files || files.length === 0) return;
+
+      uploadProgress.classList.add('is-visible');
+      let processed = 0;
+
+      for (const file of Array.from(files)) {
+        // Max 50 MB pro Datei
+        if (file.size > 50 * 1024 * 1024) {
+          showToast(file.name + ' ist zu gross (max. 50 MB)', 'error');
+          continue;
+        }
+
+        uploadLabel.textContent = file.name;
+        uploadProgressBar.style.width = '20%';
+
+        try {
+          // Blob lesen
+          const blob = file;
+          uploadProgressBar.style.width = '50%';
+
+          // Thumbnail fuer Bilder erstellen
+          let thumbnailUrl = null;
+          if (file.type.startsWith('image/')) {
+            thumbnailUrl = await createThumbnail(file);
+          }
+          uploadProgressBar.style.width = '75%';
+
+          const doc = {
+            id:           Date.now() + processed,
+            name:         file.name.replace(/\.[^.]+$/, ''), // ohne Endung
+            filename:     file.name,
+            mimeType:     file.type || 'application/octet-stream',
+            size:         file.size,
+            type:         guessDocType(file.name),
+            savedAt:      new Date().toISOString(),
+            thumbnailUrl: thumbnailUrl,
+            tripId:       0,
+          };
+
+          // Blob in IDB speichern
+          await DocStore.saveBlob(doc.id, blob);
+          documents.push(doc);
+          await DocStore.saveMeta(documents);
+
+          uploadProgressBar.style.width = '100%';
+          processed++;
+
+          vibrate([20, 10, 20]);
+
+        } catch (err) {
+          console.error('[Tresor] Upload-Fehler:', err);
+          showToast('Fehler beim Speichern: ' + file.name, 'error');
+        }
+      }
+
+      setTimeout(() => {
+        uploadProgress.classList.remove('is-visible');
+        uploadProgressBar.style.width = '0%';
+      }, 600);
+
+      renderDocGrid();
+      if (processed > 0) {
+        showToast(processed + ' Dokument' + (processed > 1 ? 'e' : '') + ' gespeichert', 'success');
+      }
+    }
+
+    // Bild-Thumbnail erstellen (max 400px breit)
+    function createThumbnail(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = 400;
+            const scale = Math.min(1, maxW / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width  = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = () => resolve(null);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Dokument loeschen
+    async function deleteDocument(id) {
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      if (!confirm('Dokument "' + doc.name + '" wirklich loeschen?')) return;
+
+      vibrate([15, 10, 40]);
+      documents = documents.filter(d => d.id !== id);
+      await DocStore.deleteBlob(id);
+      await DocStore.saveMeta(documents);
+      renderDocGrid();
+
+      // Modal schliessen falls offen
+      if (currentModalDoc?.id === id) closeDocModal();
+
+      showToast('Dokument geloescht', 'info', 2000);
+    }
+
+    // Modal oeffnen
+    async function openDocModal(doc) {
+      currentModalDoc = doc;
+      const overlay = document.getElementById('doc-modal-overlay');
+      const body    = document.getElementById('modal-body');
+      const title   = document.getElementById('modal-title');
+      const badge   = document.getElementById('modal-type-badge');
+      const meta    = document.getElementById('modal-meta');
+
+      title.textContent = doc.name;
+      meta.textContent  = formatBytes(doc.size) + ' | ' + formatDate(doc.savedAt) + ' | ' + doc.filename;
+
+      // Badge aktualisieren
+      const typeMeta = DOC_TYPES[doc.type] || DOC_TYPES.other;
+      badge.textContent = typeMeta.label;
+      badge.className   = 'doc-type-badge ' + typeMeta.badge;
+
+      // Inhalt laden
+      body.innerHTML = '<div style="color:var(--c-text-muted);font-size:13px;padding:40px;">Wird geladen...</div>';
+      overlay.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+
+      try {
+        const blob = await DocStore.loadBlob(doc.id);
+
+        if (!blob) {
+          body.innerHTML = '<div style="color:var(--c-text-muted);font-size:13px;padding:40px;text-align:center;">' +
+            '<p>Dokument konnte nicht geladen werden.</p>' +
+            '<p style="margin-top:8px;font-size:11px;opacity:0.5;">Moegliche Ursache: Browser-Speicher wurde geleert.</p>' +
+            '</div>';
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+
+        if (doc.mimeType === 'application/pdf') {
+          body.innerHTML = '<iframe class="doc-modal__pdf-frame" src="' + url + '#toolbar=0" title="' + escapeHtml(doc.name) + '"></iframe>';
+        } else if (doc.mimeType.startsWith('image/')) {
+          body.innerHTML = '<img src="' + url + '" alt="' + escapeHtml(doc.name) + '" style="max-width:100%;max-height:70dvh;object-fit:contain;" />';
+        } else {
+          body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--c-text-muted);">' +
+            '<p style="font-size:13px;">Vorschau nicht verfuegbar fuer diesen Dateityp.</p>' +
+            '<p style="margin-top:8px;font-size:11px;">(' + doc.mimeType + ')</p>' +
+            '</div>';
+        }
+
+        // Download-Button
+        document.getElementById('modal-download-btn').onclick = () => {
+          const a = document.createElement('a');
+          a.href = url; a.download = doc.filename || doc.name;
+          a.click();
+        };
+
+      } catch (err) {
+        body.innerHTML = '<div style="color:var(--c-accent-rose);font-size:13px;padding:40px;">Ladefehler: ' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    // Modal schliessen
+    function closeDocModal() {
+      const overlay = document.getElementById('doc-modal-overlay');
+      overlay.classList.remove('is-open');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        document.getElementById('modal-body').innerHTML = '';
+        currentModalDoc = null;
+      }, 300);
+    }
+
+    // Tresor initialisieren
+    async function initTresor() {
+      documents = await DocStore.loadMeta();
+      renderDocGrid();
+
+      // Datei-Input
+      const fileInput = document.getElementById('doc-file-input');
+      fileInput?.addEventListener('change', (e) => handleFiles(e.target.files));
+
+      // Drag & Drop
+      const zone = document.getElementById('upload-zone');
+      zone?.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('is-dragover');
+      });
+      zone?.addEventListener('dragleave', () => zone.classList.remove('is-dragover'));
+      zone?.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('is-dragover');
+        handleFiles(e.dataTransfer.files);
+      });
+
+      // Keyboard: Enter/Space auf Dropzone
+      zone?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput?.click();
+        }
+      });
+
+      // Filter-Tabs
+      document.querySelectorAll('.doc-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          activeDocFilter = tab.dataset.docfilter;
+          document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('is-active'));
+          tab.classList.add('is-active');
+          renderDocGrid();
+        });
+      });
+
+      // Modal-Buttons
+      document.getElementById('modal-close-btn')?.addEventListener('click', closeDocModal);
+      document.getElementById('modal-delete-btn')?.addEventListener('click', () => {
+        if (currentModalDoc) deleteDocument(currentModalDoc.id);
+      });
+
+      // Overlay-Klick schliesst Modal
+      document.getElementById('doc-modal-overlay')?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeDocModal();
+      });
+
+      // Escape-Taste
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDocModal();
+      });
+    }
+
+    // Lazy-Init beim Oeffnen des Views
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.target === 'tresor' && !tresorInitialized) {
+          tresorInitialized = true;
+          initTresor();
+        }
+      });
+    });
+
+    // Direkt per Hash
+    if (location.hash === '#tresor') {
+      tresorInitialized = true;
+      initTresor();
+    }
+
+    // Dashboard-Karte "Dokumente" oeffnet Tresor
+    document.querySelector('[data-action="open-documents"]')?.addEventListener('click', () => {
+      navigateTo('tresor');
+      if (!tresorInitialized) {
+        tresorInitialized = true;
+        initTresor();
+      }
+    });
+
+
+
+
+    // ================================================================
+    // EINSTELLUNGS-OVERLAY: Vollstaendige Logik
+    // ================================================================
+
+    const AppSettings = {
+      key: 'gt_settings',
+      defaults: {
+        haptic:       true,
+        cacheMaps:    true,
+        defaultItems: true,
+        clientId:     '',
+      },
+      load() {
+        try { return { ...this.defaults, ...JSON.parse(localStorage.getItem(this.key) || '{}') }; }
+        catch { return { ...this.defaults }; }
+      },
+      save(data) {
+        try { localStorage.setItem(this.key, JSON.stringify(data)); } catch {}
+      },
+      get(key) { return this.load()[key]; },
+      set(key, value) {
+        const s = this.load();
+        s[key] = value;
+        this.save(s);
+      },
+    };
+
+    // Client-ID zur Laufzeit in GRAPH_CONFIG schreiben
+    function applyClientId(id) {
+      if (id && id.trim()) {
+        GRAPH_CONFIG.clientId = id.trim();
+      }
+    }
+
+    // Beim Start gespeicherte Client-ID laden
+    const _savedId = AppSettings.get('clientId');
+    if (_savedId) applyClientId(_savedId);
+
+    // UUID-Format pruefen
+    function isValidUUID(str) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+    }
+
+    // Status-Pill rendern
+    function renderIdStatus(id) {
+      const el = document.getElementById('settings-id-status');
+      if (!el) return;
+      if (!id) {
+        el.innerHTML = '<div class="settings-status settings-status--missing"><span class="settings-status__dot"></span>Noch nicht eingetragen</div>';
+      } else if (isValidUUID(id)) {
+        el.innerHTML = '<div class="settings-status settings-status--ok"><span class="settings-status__dot"></span>Gueltige Client-ID gespeichert</div>';
+      } else {
+        el.innerHTML = '<div class="settings-status settings-status--error"><span class="settings-status__dot"></span>Format ungueltig (UUID erwartet)</div>';
+      }
+    }
+
+    // Settings oeffnen
+    function openSettings() {
+      const overlay = document.getElementById('settings-overlay');
+      if (!overlay) return;
+
+      // Redirect-URI anzeigen
+      const ruEl = document.getElementById('settings-redirect-uri');
+      if (ruEl) ruEl.textContent = window.location.origin + window.location.pathname;
+
+      // Gespeicherte Client-ID einsetzen
+      const savedId = AppSettings.get('clientId');
+      const input = document.getElementById('settings-client-id');
+      if (input) input.value = savedId || '';
+      renderIdStatus(savedId);
+
+      // Anleitung ein-/ausblenden
+      const guide = document.getElementById('settings-setup-guide');
+      if (guide) guide.style.display = savedId && isValidUUID(savedId) ? 'none' : 'block';
+
+      // Toggles setzen
+      const s = AppSettings.load();
+      setToggle('toggle-haptic',   s.haptic);
+      setToggle('toggle-maps',     s.cacheMaps);
+      setToggle('toggle-defaults', s.defaultItems);
+
+      // Daten-Statistiken laden
+      loadDataStats();
+
+      // SW-Status
+      const swEl = document.getElementById('settings-sw-status');
+      if (swEl) {
+        navigator.serviceWorker?.getRegistration?.()
+          .then(reg => {
+            swEl.textContent = reg
+              ? 'Aktiv (' + (reg.active?.state || 'installiert') + ')'
+              : 'Nicht registriert (benoetigt HTTPS)';
+            swEl.style.color = reg ? 'var(--c-online)' : 'var(--c-text-muted)';
+          })
+          .catch(() => { swEl.textContent = 'Nicht verfuegbar'; });
+      }
+
+      overlay.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-overlay')?.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    // Toggle-Hilfsfunktion
+    function setToggle(id, value) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('is-on', !!value);
+      el.setAttribute('aria-checked', String(!!value));
+    }
+
+    function toggleSetting(id, settingKey) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const current = el.classList.contains('is-on');
+      const next = !current;
+      setToggle(id, next);
+      AppSettings.set(settingKey, next);
+      vibrate([15]);
+    }
+
+    // Daten-Statistiken
+    async function loadDataStats() {
+      // Dokumente
+      try {
+        const docMeta = JSON.parse(localStorage.getItem('gt_docs_meta') || '[]');
+        const statDocs = document.getElementById('stat-docs');
+        if (statDocs) statDocs.textContent = docMeta.length.toLocaleString('de-DE');
+      } catch {}
+
+      // Checkliste
+      try {
+        const clItems = JSON.parse(localStorage.getItem('gt_checklist') || '[]');
+        const statCl = document.getElementById('stat-checklist');
+        if (statCl) statCl.textContent = clItems.length.toLocaleString('de-DE');
+      } catch {}
+
+      // Kommentare
+      try {
+        const comments = JSON.parse(localStorage.getItem('gt_photo_comments') || '{}');
+        const total = Object.values(comments).reduce((s, arr) => s + arr.length, 0);
+        const statCom = document.getElementById('stat-comments');
+        if (statCom) statCom.textContent = total.toLocaleString('de-DE');
+      } catch {}
+
+      // Orte aus IDB
+      try {
+        const { getAllLocations } = await import('./js/db.js');
+        const locs = await getAllLocations();
+        const statLoc = document.getElementById('stat-locations');
+        if (statLoc) statLoc.textContent = locs.length.toLocaleString('de-DE');
+      } catch {
+        const statLoc = document.getElementById('stat-locations');
+        if (statLoc) statLoc.textContent = '0';
+      }
+    }
+
+    // Event-Listener
+    document.getElementById('btn-settings')?.addEventListener('click', openSettings);
+    document.getElementById('settings-close')?.addEventListener('click', closeSettings);
+
+    // Overlay-Klick schliesst
+    document.getElementById('settings-overlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeSettings();
+    });
+
+    // Client-ID speichern
+    document.getElementById('settings-save-id')?.addEventListener('click', () => {
+      const input = document.getElementById('settings-client-id');
+      const id = input?.value?.trim() || '';
+
+      if (id && !isValidUUID(id)) {
+        renderIdStatus(id);
+        showToast('Bitte eine gueltige UUID eingeben (Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)', 'error', 4000);
+        return;
+      }
+
+      AppSettings.set('clientId', id);
+      applyClientId(id);
+      renderIdStatus(id);
+
+      const guide = document.getElementById('settings-setup-guide');
+      if (guide) guide.style.display = id && isValidUUID(id) ? 'none' : 'block';
+
+      if (id) {
+        showToast('Client-ID gespeichert. OneDrive-Verbindung bereit.', 'success');
+        vibrate([20, 10, 30]);
+        // Archiv-View aktualisieren falls gerade offen
+        if (document.getElementById('view-archiv')?.classList.contains('is-active')) {
+          archivInitialized = false;
+          initArchiv();
+        }
+      } else {
+        showToast('Client-ID entfernt.', 'info');
+        TokenStore.clear();
+      }
+    });
+
+    // Enter in Input-Feld = Speichern
+    document.getElementById('settings-client-id')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('settings-save-id')?.click();
+    });
+
+    // Live-Validierung waehrend Eingabe
+    document.getElementById('settings-client-id')?.addEventListener('input', e => {
+      const id = e.target.value.trim();
+      if (id.length >= 36) renderIdStatus(id);
+      else {
+        const el = document.getElementById('settings-id-status');
+        if (el) el.innerHTML = '';
+      }
+    });
+
+    // Toggles
+    document.getElementById('toggle-haptic')?.addEventListener('click', () => toggleSetting('toggle-haptic', 'haptic'));
+    document.getElementById('toggle-haptic')?.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleSetting('toggle-haptic', 'haptic'); }
+    });
+    document.getElementById('toggle-maps')?.addEventListener('click', () => toggleSetting('toggle-maps', 'cacheMaps'));
+    document.getElementById('toggle-defaults')?.addEventListener('click', () => toggleSetting('toggle-defaults', 'defaultItems'));
+
+    // Checkliste zuruecksetzen
+    document.getElementById('settings-clear-checklist')?.addEventListener('click', async () => {
+      if (!confirm('Alle Checklisten-Eintraege unwiderruflich loeschen?')) return;
+      localStorage.removeItem('gt_checklist');
+      checklistItems = [];
+      checklistInitialized = false;
+      renderDocGrid?.();
+      updateProgress?.();
+      closeSettings();
+      showToast('Checkliste zurueckgesetzt.', 'info');
+      vibrate([20, 10, 40]);
+    });
+
+    // Alle Daten loeschen
+    document.getElementById('settings-clear-all')?.addEventListener('click', async () => {
+      if (!confirm('ACHTUNG: Alle lokal gespeicherten Daten (Dokumente, Checkliste, Kommentare, Orte) werden geloescht. Fortfahren?')) return;
+      if (!confirm('Wirklich alles loeschen? Dies kann nicht rueckgaengig gemacht werden.')) return;
+
+      const keys = ['gt_checklist', 'gt_docs_meta', 'gt_photo_comments', 'gt_od_token', 'gt_od_user'];
+      keys.forEach(k => localStorage.removeItem(k));
+
+      try {
+        const { clearAllData } = await import('./js/db.js');
+        await clearAllData();
+      } catch {}
+
+      // In-Memory zuruecksetzen
+      checklistItems     = [];
+      documents          = [];
+      checklistInitialized = false;
+      tresorInitialized    = false;
+      archivInitialized    = false;
+
+      closeSettings();
+      showToast('Alle Daten geloescht. App zurueckgesetzt.', 'info', 4000);
+      vibrate([30, 20, 60]);
+
+      // Dashboard aktualisieren
+      setTimeout(() => {
+        document.getElementById('doc-count')?.textContent && (document.getElementById('doc-count').textContent = '0');
+        document.getElementById('checklist-progress-text')?.textContent && (document.getElementById('checklist-progress-text').textContent = '0 / 0');
+        document.getElementById('checklist-progress-bar')?.style && (document.getElementById('checklist-progress-bar').style.width = '0%');
+      }, 300);
+    });
+
+    // Einstellungen beim Start laden (Haptic-Pref anwenden)
+    (function applyStartupSettings() {
+      const s = AppSettings.load();
+      // Wenn Haptic deaktiviert: vibrate-Funktion deaktivieren
+      if (!s.haptic) {
+        window._hapticEnabled = false;
+      } else {
+        window._hapticEnabled = true;
+      }
+    })();
+
+    // vibrate() patchen um Einstellung zu respektieren
+    const _origVibrate = window.vibrate;
+    window.vibrate = function(pattern) {
+      if (window._hapticEnabled === false) return;
+      _origVibrate?.(pattern);
+    };
+
+
+    // ================================================================
+    // ONEDRIVE OAUTH2 + BILDBAND + KOMMENTARE
+    // Microsoft Graph API PKCE-Flow (kein Backend noetig)
+    // ================================================================
+
+    // ------------------------------------------------------------
+    // KONFIGURATION
+    // Fuer den produktiven Einsatz: Azure App-Registrierung anlegen
+    // https://portal.azure.com -> App registrations -> New registration
+    // Redirect URI: https://DEINE-DOMAIN/index.html
+    // Berechtigungen: Files.Read, User.Read (delegated)
+    // ------------------------------------------------------------
+    const GRAPH_CONFIG = {
+      clientId:    'DEINE-AZURE-APP-ID',   // <- hier eintragen
+      redirectUri: window.location.origin + window.location.pathname,
+      scopes:      ['Files.Read', 'User.Read', 'offline_access'],
+      authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenEndpoint:'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      graphBase:   'https://graph.microsoft.com/v1.0',
+    };
+
+    // Token-Verwaltung
+    const TokenStore = {
+      save(data) {
+        try {
+          localStorage.setItem('gt_od_token', JSON.stringify({
+            ...data,
+            savedAt: Date.now(),
+          }));
+        } catch {}
+      },
+      load() {
+        try {
+          const raw = localStorage.getItem('gt_od_token');
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      },
+      clear() {
+        localStorage.removeItem('gt_od_token');
+        localStorage.removeItem('gt_od_pkce');
+        localStorage.removeItem('gt_od_user');
+      },
+      isValid() {
+        const t = this.load();
+        if (!t?.access_token) return false;
+        const age = (Date.now() - (t.savedAt || 0)) / 1000;
+        return age < (t.expires_in || 3600) - 60;
+      },
+    };
+
+    // Kommentare lokal speichern
+    const CommentStore = {
+      key: 'gt_photo_comments',
+      load() {
+        try { return JSON.parse(localStorage.getItem(this.key) || '{}'); } catch { return {}; }
+      },
+      save(data) {
+        try { localStorage.setItem(this.key, JSON.stringify(data)); } catch {}
+      },
+      getForPhoto(photoId) {
+        return this.load()[photoId] || [];
+      },
+      addComment(photoId, text) {
+        const all = this.load();
+        if (!all[photoId]) all[photoId] = [];
+        all[photoId].push({
+          text,
+          createdAt: new Date().toISOString(),
+          id: Date.now(),
+        });
+        this.save(all);
+        return all[photoId];
+      },
+      deleteComment(photoId, commentId) {
+        const all = this.load();
+        if (all[photoId]) {
+          all[photoId] = all[photoId].filter(c => c.id !== commentId);
+          this.save(all);
+        }
+      },
+      hasComments(photoId) {
+        return (this.load()[photoId] || []).length > 0;
+      },
+    };
+
+    // ------------------------------------------------------------
+    // PKCE: Code Verifier + Challenge generieren
+    // ------------------------------------------------------------
+    async function generatePKCE() {
+      const array = new Uint8Array(32);
+      crypto.getRandomValues(array);
+      const verifier = btoa(String.fromCharCode(...array))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(verifier);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+      return { verifier, challenge };
+    }
+
+    // ------------------------------------------------------------
+    // OAUTH2 LOGIN starten
+    // ------------------------------------------------------------
+    async function startOAuthLogin() {
+      // Pruefen ob Client-ID konfiguriert ist
+      if (GRAPH_CONFIG.clientId === 'DEINE-AZURE-APP-ID') {
+        showOAuthSetupGuide();
+        return;
+      }
+
+      const { verifier, challenge } = await generatePKCE();
+      const state = crypto.randomUUID();
+
+      sessionStorage.setItem('gt_od_pkce', verifier);
+      sessionStorage.setItem('gt_od_state', state);
+
+      const params = new URLSearchParams({
+        client_id:             GRAPH_CONFIG.clientId,
+        response_type:         'code',
+        redirect_uri:          GRAPH_CONFIG.redirectUri,
+        scope:                 GRAPH_CONFIG.scopes.join(' '),
+        state,
+        code_challenge:        challenge,
+        code_challenge_method: 'S256',
+        response_mode:         'query',
+      });
+
+      window.location.href = GRAPH_CONFIG.authEndpoint + '?' + params.toString();
+    }
+
+    // OAuth-Setup-Anleitung anzeigen (Demo-Modus)
+    function showOAuthSetupGuide() {
+      const loginDiv = document.getElementById('archiv-login');
+      if (!loginDiv) return;
+
+      loginDiv.innerHTML = `
+        <div style="max-width:360px;text-align:left;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+            <div class="onedrive-logo"><svg viewBox="0 0 32 32" width="28" height="28" fill="white"><path d="M18.8 13.2c.9-2.1 3-3.5 5.3-3.5 3.3 0 6 2.7 6 6s-2.7 6-6 6H8.5C5.5 21.7 3 19.2 3 16.2c0-2.7 1.9-5 4.5-5.6.4-3.2 3.1-5.6 6.4-5.6 2.2 0 4.2 1.1 5.4 2.8l-.5 5.4z"/></svg></div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:20px;font-weight:300;color:var(--c-text);">OneDrive einrichten</div>
+              <div style="font-size:12px;color:var(--c-text-muted);">Einmalige Konfiguration notwending</div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+            <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;padding:16px;">
+              <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px;">Schritt 1</div>
+              <div style="font-size:13px;color:var(--c-text);line-height:1.6;">
+                Gehe zu <strong style="color:var(--c-gold)">portal.azure.com</strong> und melde dich mit deinem Microsoft-Konto an.
+              </div>
+            </div>
+            <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;padding:16px;">
+              <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px;">Schritt 2</div>
+              <div style="font-size:13px;color:var(--c-text);line-height:1.6;">
+                Neue App-Registrierung anlegen.<br>
+                Name: <em>GlobeTrotter SQL</em><br>
+                Kontotyp: Persoenliche Microsoft-Konten<br>
+                Redirect-URI: <code style="font-size:11px;background:var(--c-surface-3);padding:2px 6px;border-radius:4px;">${GRAPH_CONFIG.redirectUri}</code>
+              </div>
+            </div>
+            <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;padding:16px;">
+              <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px;">Schritt 3</div>
+              <div style="font-size:13px;color:var(--c-text);line-height:1.6;">
+                API-Berechtigungen hinzufuegen:<br>
+                <strong>Files.Read</strong> und <strong>User.Read</strong> (delegiert)
+              </div>
+            </div>
+            <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;padding:16px;">
+              <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold);margin-bottom:8px;">Schritt 4</div>
+              <div style="font-size:13px;color:var(--c-text);line-height:1.6;">
+                Die <strong>Application (client) ID</strong> kopieren und in<br>
+                <code style="font-size:11px;background:var(--c-surface-3);padding:2px 6px;border-radius:4px;">GRAPH_CONFIG.clientId</code> eintragen.
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-secondary" onclick="loadDemoMode()" style="width:100%;justify-content:center;">
+            Demo-Modus: Mit Beispiel-Fotos testen
+          </button>
+        </div>
+      `;
+    }
+
+    // ------------------------------------------------------------
+    // OAUTH CALLBACK verarbeiten (nach Redirect)
+    // ------------------------------------------------------------
+    async function handleOAuthCallback() {
+      const params   = new URLSearchParams(window.location.search);
+      const code     = params.get('code');
+      const state    = params.get('state');
+      const error    = params.get('error');
+
+      if (error) {
+        showToast('Anmeldung fehlgeschlagen: ' + params.get('error_description'), 'error');
+        return false;
+      }
+      if (!code) return false;
+
+      // State pruefen
+      const savedState   = sessionStorage.getItem('gt_od_state');
+      const savedVerifier= sessionStorage.getItem('gt_od_pkce');
+      if (state !== savedState || !savedVerifier) {
+        showToast('Sicherheitsfehler beim Login. Bitte erneut versuchen.', 'error');
+        return false;
+      }
+
+      // URL saeubern
+      history.replaceState({}, '', window.location.pathname);
+
+      try {
+        const body = new URLSearchParams({
+          client_id:     GRAPH_CONFIG.clientId,
+          grant_type:    'authorization_code',
+          code,
+          redirect_uri:  GRAPH_CONFIG.redirectUri,
+          code_verifier: savedVerifier,
+        });
+
+        const resp = await fetch(GRAPH_CONFIG.tokenEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        });
+
+        const tokenData = await resp.json();
+        if (tokenData.error) throw new Error(tokenData.error_description);
+
+        TokenStore.save(tokenData);
+        sessionStorage.removeItem('gt_od_pkce');
+        sessionStorage.removeItem('gt_od_state');
+
+        return true;
+      } catch (err) {
+        showToast('Token-Fehler: ' + err.message, 'error');
+        return false;
+      }
+    }
+
+    // ------------------------------------------------------------
+    // GRAPH API: Hilfsfunktionen
+    // ------------------------------------------------------------
+    async function graphFetch(endpoint, opts = {}) {
+      const token = TokenStore.load();
+      if (!token?.access_token) throw new Error('Nicht angemeldet');
+
+      const resp = await fetch(GRAPH_CONFIG.graphBase + endpoint, {
+        ...opts,
+        headers: {
+          'Authorization': 'Bearer ' + token.access_token,
+          'Content-Type': 'application/json',
+          ...(opts.headers || {}),
+        },
+      });
+
+      if (resp.status === 401) {
+        TokenStore.clear();
+        archivShowLogin();
+        throw new Error('Sitzung abgelaufen. Bitte neu anmelden.');
+      }
+      if (!resp.ok) throw new Error('Graph API Fehler: ' + resp.status);
+      return resp.json();
+    }
+
+    async function fetchUserProfile() {
+      try {
+        const user = await graphFetch('/me?$select=displayName,mail,userPrincipalName');
+        localStorage.setItem('gt_od_user', JSON.stringify(user));
+        return user;
+      } catch { return null; }
+    }
+
+    // OneDrive-Fotoordner laden (Verzeichnisse auf oberster Ebene)
+    async function fetchOneDriveFolders() {
+      const data = await graphFetch('/me/drive/root/children?$filter=folder ne null&$select=id,name,folder,lastModifiedDateTime&$orderby=lastModifiedDateTime desc&$top=20');
+      return data.value || [];
+    }
+
+    // Fotos in einem Ordner laden
+    async function fetchPhotosInFolder(folderId, skipToken = null) {
+      let url = `/me/drive/items/${folderId}/children?$filter=file ne null&$select=id,name,file,photo,createdDateTime,thumbnails&$expand=thumbnails&$top=30&$orderby=createdDateTime desc`;
+      if (skipToken) url += '&$skiptoken=' + encodeURIComponent(skipToken);
+      const data = await graphFetch(url);
+      return {
+        items:     data.value || [],
+        nextToken: data['@odata.nextLink'] ? new URL(data['@odata.nextLink']).searchParams.get('$skiptoken') : null,
+      };
+    }
+
+    // Thumbnail-URL holen
+    function getThumbnailUrl(item, size = 'medium') {
+      const thumbs = item.thumbnails?.[0];
+      if (!thumbs) return null;
+      return thumbs[size]?.url || thumbs.large?.url || thumbs.small?.url || null;
+    }
+
+    // ------------------------------------------------------------
+    // ARCHIV: UI-Zustaende
+    // ------------------------------------------------------------
+    let currentPhotos     = [];
+    let currentPhotoIndex = 0;
+    let currentFolderId   = null;
+    let nextPageToken     = null;
+    let archivInitialized = false;
+
+    function archivShowLogin() {
+      document.getElementById('archiv-login').hidden      = false;
+      document.getElementById('archiv-connected').hidden  = true;
+      document.getElementById('archiv-bildband').hidden   = true;
+    }
+
+    function archivShowConnected() {
+      document.getElementById('archiv-login').hidden      = true;
+      document.getElementById('archiv-connected').hidden  = false;
+      document.getElementById('archiv-bildband').hidden   = true;
+    }
+
+    function archivShowBildband(folderName) {
+      document.getElementById('archiv-login').hidden      = true;
+      document.getElementById('archiv-connected').hidden  = true;
+      document.getElementById('archiv-bildband').hidden   = false;
+      document.getElementById('bildband-trip-name').textContent = folderName;
+    }
+
+    // Benutzer-Info anzeigen
+    function renderAuthBar(user) {
+      const initial = (user?.displayName || user?.mail || 'W').charAt(0).toUpperCase();
+      document.getElementById('archiv-avatar').textContent    = initial;
+      document.getElementById('archiv-user-name').textContent = user?.displayName || 'Microsoft-Konto';
+      document.getElementById('archiv-user-email').textContent= user?.mail || user?.userPrincipalName || '';
+    }
+
+    // Ordner-Karten rendern
+    function renderFolderCards(folders) {
+      const grid = document.getElementById('archiv-trip-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      if (folders.length === 0) {
+        grid.innerHTML = '<div style="grid-column:span 3;text-align:center;padding:40px;color:var(--c-text-muted);font-size:13px;">Keine Ordner in OneDrive gefunden.<br>Erstelle Ordner mit deinen Reisefotos.</div>';
+        return;
+      }
+
+      folders.forEach(folder => {
+        const card = document.createElement('div');
+        card.className = 'trip-select-card';
+        const date = new Date(folder.lastModifiedDateTime);
+        const year = date.getFullYear();
+        const count = folder.folder?.childCount || 0;
+
+        card.innerHTML =
+          '<div class="trip-select-card__year">' + year + '</div>' +
+          '<div class="trip-select-card__name">' + escapeHtml(folder.name) + '</div>' +
+          '<div class="trip-select-card__count">' + count.toLocaleString('de-DE') + ' Elemente</div>';
+
+        card.addEventListener('click', () => openFolderBildband(folder));
+        grid.appendChild(card);
+      });
+    }
+
+    // Bildband eines Ordners oeffnen
+    async function openFolderBildband(folder) {
+      currentFolderId = folder.id;
+      currentPhotos   = [];
+      nextPageToken   = null;
+
+      archivShowBildband(folder.name);
+      document.getElementById('bildband-grid').innerHTML =
+        Array(6).fill('<div class="photo-card"><div class="skeleton" style="aspect-ratio:4/3;"></div></div>').join('');
+
+      try {
+        const result = await fetchPhotosInFolder(folder.id);
+        const photos = result.items.filter(i => i.file?.mimeType?.startsWith('image/'));
+        nextPageToken = result.nextToken;
+        currentPhotos = photos;
+
+        renderPhotoGrid(photos, false);
+
+        document.getElementById('bildband-photo-count').textContent =
+          photos.length.toLocaleString('de-DE') + ' Fotos' + (nextPageToken ? '+' : '');
+        document.getElementById('bildband-load-more').hidden = !nextPageToken;
+
+      } catch (err) {
+        showToast('Fotos konnten nicht geladen werden: ' + err.message, 'error');
+        document.getElementById('bildband-grid').innerHTML =
+          '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--c-text-muted);font-size:13px;">Fehler beim Laden der Fotos.</div>';
+      }
+    }
+
+    // Foto-Grid rendern
+    function renderPhotoGrid(photos, append = false) {
+      const grid = document.getElementById('bildband-grid');
+      if (!grid) return;
+      if (!append) grid.innerHTML = '';
+
+      if (photos.length === 0 && !append) {
+        grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--c-text-muted);font-size:13px;">Keine Fotos in diesem Ordner.</div>';
+        return;
+      }
+
+      photos.forEach((photo, idx) => {
+        const thumbUrl = getThumbnailUrl(photo, 'medium');
+        const hasComment = CommentStore.hasComments(photo.id);
+        const date = photo.createdDateTime
+          ? new Date(photo.createdDateTime).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })
+          : '';
+
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.setAttribute('role', 'listitem');
+
+        card.innerHTML =
+          (thumbUrl
+            ? '<img class="photo-card__img" src="' + thumbUrl + '" alt="' + escapeHtml(photo.name) + '" loading="lazy" />'
+            : '<div class="photo-card__img skeleton"></div>') +
+          '<div class="photo-card__overlay"></div>' +
+          '<div class="photo-card__date">' + date + '</div>' +
+          (hasComment ? '<div class="photo-card__comment-dot" title="Hat Kommentar"></div>' : '');
+
+        card.addEventListener('click', () => {
+          const globalIdx = append
+            ? currentPhotos.findIndex(p => p.id === photo.id)
+            : idx;
+          openLightbox(Math.max(0, globalIdx));
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Sortierung
+    document.querySelectorAll('[data-bildsort]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-bildsort]').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+
+        const sort = btn.dataset.bildsort;
+        let sorted = [...currentPhotos];
+        if (sort === 'date-asc') {
+          sorted.sort((a,b) => new Date(a.createdDateTime) - new Date(b.createdDateTime));
+        } else if (sort === 'date-desc') {
+          sorted.sort((a,b) => new Date(b.createdDateTime) - new Date(a.createdDateTime));
+        } else if (sort === 'commented') {
+          sorted.sort((a,b) => (CommentStore.hasComments(b.id) ? 1 : 0) - (CommentStore.hasComments(a.id) ? 1 : 0));
+        }
+        renderPhotoGrid(sorted, false);
+      });
+    });
+
+    // ------------------------------------------------------------
+    // LIGHTBOX
+    // ------------------------------------------------------------
+    function openLightbox(index) {
+      currentPhotoIndex = Math.max(0, Math.min(index, currentPhotos.length - 1));
+      const lb = document.getElementById('photo-lightbox');
+      lb.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      renderLightboxPhoto();
+    }
+
+    function closeLightbox() {
+      document.getElementById('photo-lightbox').classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    function renderLightboxPhoto() {
+      const photo = currentPhotos[currentPhotoIndex];
+      if (!photo) return;
+
+      const thumbUrl = getThumbnailUrl(photo, 'large') || getThumbnailUrl(photo, 'medium');
+
+      document.getElementById('lightbox-img').src   = thumbUrl || '';
+      document.getElementById('lightbox-img').alt   = photo.name || '';
+      document.getElementById('lightbox-title').textContent =
+        photo.name?.replace(/\.[^.]+$/, '') || 'Foto';
+      document.getElementById('lightbox-counter').textContent =
+        (currentPhotoIndex + 1).toLocaleString('de-DE') + ' / ' + currentPhotos.length.toLocaleString('de-DE');
+
+      // Pfeile zeigen/verbergen
+      document.getElementById('lightbox-prev').style.opacity = currentPhotoIndex > 0 ? '1' : '0.2';
+      document.getElementById('lightbox-next').style.opacity = currentPhotoIndex < currentPhotos.length - 1 ? '1' : '0.2';
+
+      renderComments(photo.id);
+    }
+
+    // Kommentare rendern
+    function renderComments(photoId) {
+      const list    = document.getElementById('comments-list');
+      const empty   = document.getElementById('comment-empty');
+      const comments= CommentStore.getForPhoto(photoId);
+
+      list.innerHTML = '';
+
+      if (comments.length === 0) {
+        const em = document.createElement('div');
+        em.className = 'comment-empty';
+        em.textContent = 'Noch keine Notiz zu diesem Foto.';
+        list.appendChild(em);
+        return;
+      }
+
+      comments.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'comment-item';
+        const date = new Date(c.createdAt).toLocaleDateString('de-DE', {
+          day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+        });
+        item.innerHTML =
+          '<div class="comment-item__text">' + escapeHtml(c.text) + '</div>' +
+          '<div class="comment-item__meta">' + date +
+            ' &nbsp; <span style="cursor:pointer;color:var(--c-accent-rose);" data-comment-id="' + c.id + '">loeschen</span>' +
+          '</div>';
+
+        item.querySelector('[data-comment-id]')?.addEventListener('click', () => {
+          CommentStore.deleteComment(photoId, c.id);
+          renderComments(photoId);
+          refreshPhotoCardDot(photoId);
+        });
+
+        list.appendChild(item);
+      });
+    }
+
+    // Kommentar-Dot auf Karte aktualisieren
+    function refreshPhotoCardDot(photoId) {
+      const grid = document.getElementById('bildband-grid');
+      const cards = grid?.querySelectorAll('.photo-card');
+      if (!cards) return;
+      cards.forEach((card, i) => {
+        if (currentPhotos[i]?.id === photoId) {
+          let dot = card.querySelector('.photo-card__comment-dot');
+          const hasComment = CommentStore.hasComments(photoId);
+          if (hasComment && !dot) {
+            dot = document.createElement('div');
+            dot.className = 'photo-card__comment-dot';
+            card.appendChild(dot);
+          } else if (!hasComment && dot) {
+            dot.remove();
+          }
+        }
+      });
+    }
+
+    // Kommentar absenden
+    function submitComment() {
+      const input   = document.getElementById('comment-input');
+      const text    = input.value.trim();
+      const photo   = currentPhotos[currentPhotoIndex];
+      if (!text || !photo) return;
+
+      CommentStore.addComment(photo.id, text);
+      input.value = '';
+      renderComments(photo.id);
+      refreshPhotoCardDot(photo.id);
+      vibrate([20, 10, 20]);
+    }
+
+    // Lightbox Event-Listener
+    document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
+    document.getElementById('lightbox-prev')?.addEventListener('click', () => {
+      if (currentPhotoIndex > 0) { currentPhotoIndex--; renderLightboxPhoto(); }
+    });
+    document.getElementById('lightbox-next')?.addEventListener('click', () => {
+      if (currentPhotoIndex < currentPhotos.length - 1) { currentPhotoIndex++; renderLightboxPhoto(); }
+    });
+    document.getElementById('comment-submit')?.addEventListener('click', submitComment);
+    document.getElementById('comment-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); }
+    });
+
+    // Swipe-Gesten in der Lightbox
+    let lbTouchStartX = 0;
+    document.getElementById('lightbox-photo-area')?.addEventListener('touchstart', e => {
+      lbTouchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    document.getElementById('photo-lightbox')?.addEventListener('touchstart', e => {
+      lbTouchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    document.getElementById('photo-lightbox')?.addEventListener('touchend', e => {
+      const dx = lbTouchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(dx) < 50) return;
+      if (dx > 0 && currentPhotoIndex < currentPhotos.length - 1) { currentPhotoIndex++; renderLightboxPhoto(); }
+      if (dx < 0 && currentPhotoIndex > 0) { currentPhotoIndex--; renderLightboxPhoto(); }
+    });
+
+    // Keyboard-Navigation
+    document.addEventListener('keydown', e => {
+      const lb = document.getElementById('photo-lightbox');
+      if (!lb?.classList.contains('is-open')) return;
+      if (e.key === 'ArrowRight' && currentPhotoIndex < currentPhotos.length - 1) { currentPhotoIndex++; renderLightboxPhoto(); }
+      if (e.key === 'ArrowLeft'  && currentPhotoIndex > 0) { currentPhotoIndex--; renderLightboxPhoto(); }
+    });
+
+    // Weitere Fotos laden
+    document.getElementById('btn-load-more-photos')?.addEventListener('click', async () => {
+      if (!nextPageToken || !currentFolderId) return;
+      const btn = document.getElementById('btn-load-more-photos');
+      btn.textContent = 'Wird geladen...';
+      btn.disabled = true;
+      try {
+        const result = await fetchPhotosInFolder(currentFolderId, nextPageToken);
+        const newPhotos = result.items.filter(i => i.file?.mimeType?.startsWith('image/'));
+        nextPageToken = result.nextToken;
+        currentPhotos.push(...newPhotos);
+        renderPhotoGrid(newPhotos, true);
+        document.getElementById('bildband-load-more').hidden = !nextPageToken;
+        document.getElementById('bildband-photo-count').textContent =
+          currentPhotos.length.toLocaleString('de-DE') + ' Fotos' + (nextPageToken ? '+' : '');
+      } catch (err) {
+        showToast('Fehler: ' + err.message, 'error');
+      }
+      btn.textContent = 'Weitere Fotos laden';
+      btn.disabled = false;
+    });
+
+    // ------------------------------------------------------------
+    // DEMO-MODUS: Beispielfotos ohne OneDrive
+    // ------------------------------------------------------------
+    window.loadDemoMode = function() {
+      const DEMO_PLACES = [
+        { name: 'Santorini, Griechenland', year: '2024', photos: 12 },
+        { name: 'Kyoto, Japan',            year: '2023', photos: 34 },
+        { name: 'Marokko Rundreise',       year: '2023', photos: 28 },
+        { name: 'Island Roadtrip',         year: '2022', photos: 41 },
+        { name: 'New York City',           year: '2022', photos: 19 },
+      ];
+
+      const DEMO_PHOTOS = Array.from({ length: 18 }, (_, i) => ({
+        id:               'demo-' + i,
+        name:             'IMG_' + String(i + 1).padStart(4, '0') + '.jpg',
+        createdDateTime:  new Date(2024, 5, i + 1).toISOString(),
+        file:             { mimeType: 'image/jpeg' },
+        thumbnails:       [{ medium: { url: 'https://picsum.photos/seed/gt' + i + '/400/300' },
+                             large:  { url: 'https://picsum.photos/seed/gt' + i + '/1200/900' } }],
+      }));
+
+      // Demo-User setzen
+      renderAuthBar({ displayName: 'W & B', mail: 'demo@globetrotter.app' });
+      archivShowConnected();
+
+      // Demo-Ordner rendern
+      const grid = document.getElementById('archiv-trip-grid');
+      grid.innerHTML = '';
+      DEMO_PLACES.forEach(place => {
+        const card = document.createElement('div');
+        card.className = 'trip-select-card';
+        card.innerHTML =
+          '<div class="trip-select-card__year">' + place.year + '</div>' +
+          '<div class="trip-select-card__name">' + place.name + '</div>' +
+          '<div class="trip-select-card__count">' + place.photos + ' Fotos</div>';
+        card.addEventListener('click', () => {
+          currentPhotos = DEMO_PHOTOS;
+          archivShowBildband(place.name);
+          renderPhotoGrid(DEMO_PHOTOS, false);
+          document.getElementById('bildband-photo-count').textContent = DEMO_PHOTOS.length + ' Fotos (Demo)';
+        });
+        grid.appendChild(card);
+      });
+
+      showToast('Demo-Modus aktiv. Fotos von picsum.photos.', 'info');
+    };
+
+    // ------------------------------------------------------------
+    // ARCHIV INITIALISIERUNG
+    // ------------------------------------------------------------
+    async function initArchiv() {
+      // OAuth Callback pruefen
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('code') || urlParams.has('error')) {
+        const ok = await handleOAuthCallback();
+        if (ok) showToast('Erfolgreich mit OneDrive verbunden!', 'success');
+      }
+
+      // Login-Button
+      document.getElementById('btn-onedrive-connect')?.addEventListener('click', startOAuthLogin);
+      document.getElementById('btn-onedrive-disconnect')?.addEventListener('click', () => {
+        TokenStore.clear();
+        archivShowLogin();
+        showToast('Von OneDrive abgemeldet.', 'info');
+      });
+
+      // Zurueck-Button
+      document.getElementById('btn-bildband-back')?.addEventListener('click', archivShowConnected);
+
+      // Verbindungsstatus pruefen
+      if (TokenStore.isValid()) {
+        archivShowConnected();
+        const cachedUser = localStorage.getItem('gt_od_user');
+        if (cachedUser) {
+          renderAuthBar(JSON.parse(cachedUser));
+        }
+        // Ordner laden
+        try {
+          const [user, folders] = await Promise.all([fetchUserProfile(), fetchOneDriveFolders()]);
+          if (user) renderAuthBar(user);
+          renderFolderCards(folders);
+        } catch (err) {
+          showToast('OneDrive: ' + err.message, 'error');
+        }
+      } else {
+        archivShowLogin();
+      }
+    }
+
+    // Lazy-Init
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.target === 'archiv' && !archivInitialized) {
+          archivInitialized = true;
+          initArchiv();
+        }
+      });
+    });
+
+    if (location.hash === '#archiv') {
+      archivInitialized = true;
+      initArchiv();
+    }
+
+
+    // ----------------------------------------------------------------
+    // INITIALISIERUNG
+    // ----------------------------------------------------------------
+    async function init() {
+      await registerServiceWorker();
+
+      // Service Worker Nachrichten empfangen
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (e) => {
+          if (e.data?.type === 'SYNC_COMPLETE') {
+            showToast(`Synchronisation abgeschlossen: ${e.data.payload}`, 'success');
+          }
+        });
+      }
+
+      console.log('[App] GlobeTrotter SQL bereit.');
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
