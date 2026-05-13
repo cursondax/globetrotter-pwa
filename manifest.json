@@ -1,0 +1,135 @@
+{
+  "name": "GlobeTrotter SQL",
+  "short_name": "GlobeTrotter",
+  "description": "Dein intelligenter Reisebegleiter. Offline-fähig, mit OneDrive-Archiv und interaktiver Weltkarte.",
+  "start_url": "/index.html",
+  "id": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "lang": "de",
+  "dir": "ltr",
+  "categories": ["travel", "productivity", "lifestyle"],
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "icons/icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Aktuelle Reise Übersicht"
+    },
+    {
+      "src": "screenshots/desktop-map.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Interaktive Weltkarte"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aktuelle Reise",
+      "short_name": "Reise",
+      "description": "Öffne die aktuelle Reise direkt",
+      "url": "/index.html#reise",
+      "icons": [{ "src": "icons/shortcut-trip.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Checkliste",
+      "short_name": "Checkliste",
+      "description": "Öffne die Packliste",
+      "url": "/index.html#checkliste",
+      "icons": [{ "src": "icons/shortcut-check.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Weltkarte",
+      "short_name": "Karte",
+      "description": "Alle besuchten Orte auf der Karte",
+      "url": "/index.html#weltkarte",
+      "icons": [{ "src": "icons/shortcut-map.png", "sizes": "96x96" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*", "application/pdf"]
+        }
+      ]
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "/open-file",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "image/*": [".jpg", ".jpeg", ".png", ".webp", ".heic"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+globetrotter",
+      "url": "/handle-protocol?url=%s"
+    }
+  ]
+}
