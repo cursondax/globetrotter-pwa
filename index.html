@@ -4393,7 +4393,7 @@
     // ------------------------------------------------------------
     // OAUTH2 LOGIN starten
     // ------------------------------------------------------------
-    async function startOAuthLogin() {
+    window.startOAuthLogin = async function startOAuthLogin() {
       // Pruefen ob Client-ID konfiguriert ist
       if (GRAPH_CONFIG.clientId === 'DEINE-AZURE-APP-ID') {
         showOAuthSetupGuide();
@@ -4955,6 +4955,18 @@
     // ------------------------------------------------------------
     // ARCHIV INITIALISIERUNG
     // ------------------------------------------------------------
+
+    // ----------------------------------------------------------------
+    // EVENT-DELEGATION fuer dynamische OneDrive-Buttons
+    // Faengt alle btn-onedrive-connect Clicks ab, egal wann das HTML gerendert wird
+    // ----------------------------------------------------------------
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('#btn-onedrive-connect');
+      if (!btn) return;
+      e.preventDefault();
+      window.startOAuthLogin();
+    });
+
     async function initArchiv() {
       // OAuth Callback pruefen
       const urlParams = new URLSearchParams(window.location.search);
@@ -4964,7 +4976,7 @@
       }
 
       // Login-Button
-      document.getElementById('btn-onedrive-connect')?.addEventListener('click', startOAuthLogin);
+      // Event-Delegation: Button-Clicks werden auf document-Ebene abgefangen (siehe unten)
       document.getElementById('btn-onedrive-disconnect')?.addEventListener('click', () => {
         TokenStore.clear();
         archivShowLogin();
