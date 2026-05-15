@@ -1841,6 +1841,80 @@
 
 
     /* ============================================================
+       REISE-MODAL
+    ============================================================ */
+    .trip-modal-overlay {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(200, 195, 188, 0.80);
+      backdrop-filter: blur(24px);
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--t-normal) var(--ease-in-out);
+      padding: 0;
+    }
+    .trip-modal-overlay.is-open { opacity: 1; pointer-events: all; }
+    .trip-modal {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-xl) var(--r-xl) 0 0;
+      width: min(560px, 100%); max-height: 92dvh;
+      display: flex; flex-direction: column;
+      transform: translateY(40px);
+      transition: transform var(--t-normal) var(--ease-out-expo);
+      overflow: hidden;
+    }
+    .trip-modal-overlay.is-open .trip-modal { transform: translateY(0); }
+    .trip-modal__handle {
+      width: 36px; height: 4px; border-radius: var(--r-full);
+      background: var(--c-surface-3); margin: 12px auto 0; flex-shrink: 0;
+    }
+    .trip-modal__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-5) var(--space-6) var(--space-4); flex-shrink: 0;
+    }
+    .trip-modal__title {
+      font-family: var(--font-display); font-size: var(--fs-xl);
+      font-weight: var(--fw-light); color: var(--c-text);
+    }
+    .trip-modal__body {
+      flex: 1; overflow-y: auto;
+      padding: 0 var(--space-6) var(--space-8);
+      display: flex; flex-direction: column; gap: var(--space-5);
+    }
+    .trip-field { display: flex; flex-direction: column; gap: var(--space-2); }
+    .trip-field__label {
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-muted);
+    }
+    .trip-field__input, .trip-field__select {
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      border-radius: var(--r-md); padding: var(--space-3) var(--space-4);
+      font-family: var(--font-body); font-size: var(--fs-sm); color: var(--c-text);
+      outline: none; caret-color: var(--c-gold);
+      transition: border-color var(--t-fast);
+      width: 100%; box-sizing: border-box;
+    }
+    .trip-field__input:focus, .trip-field__select:focus { border-color: rgba(201,168,76,0.5); }
+    .trip-field__input::placeholder { color: var(--c-text-faint); }
+    .trip-field__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+    .trip-field__select { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: var(--space-8);
+    }
+    .trip-modal__footer {
+      padding: var(--space-4) var(--space-6) var(--space-6);
+      display: flex; gap: var(--space-3); flex-shrink: 0;
+      border-top: 1px solid var(--c-border);
+    }
+    .trip-status-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: 6px; vertical-align: middle;
+    }
+    .trip-status--planned  { background: var(--c-gold); }
+    .trip-status--active   { background: var(--c-online); }
+    .trip-status--done     { background: var(--c-text-muted); }
+
+    /* ============================================================
        RESPONSIVE: TABLET / DESKTOP
     ============================================================ */
     @media (min-width: 768px) {
@@ -2022,9 +2096,17 @@
               Reise noch nicht gestartet
             </span>
           </div>
+          <button class="btn-secondary" id="btn-edit-trip" hidden
+            style="margin-top:var(--space-4);padding:6px 16px;font-size:var(--fs-xs);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Reise bearbeiten
+          </button>
         </div>
 
-        <div class="dashboard-grid" id="dashboard-grid">
+        <div class="dashboard-grid" id="dashboard-grid" hidden>
           <!-- Dokumente -->
           <div class="dashboard-card" data-action="open-documents" role="button" tabindex="0" aria-label="Dokumente oeffnen">
             <svg class="dashboard-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -2528,6 +2610,69 @@
     <!-- ======================================================
          EINSTELLUNGS-OVERLAY
     ====================================================== -->
+    <!-- ======================================================
+         REISE-MODAL (Erstellen / Bearbeiten)
+    ====================================================== -->
+    <div class="trip-modal-overlay" id="trip-modal-overlay" role="dialog"
+      aria-modal="true" aria-label="Reise erstellen">
+      <div class="trip-modal">
+        <div class="trip-modal__handle"></div>
+        <div class="trip-modal__header">
+          <span class="trip-modal__title" id="trip-modal-title">Neue Reise</span>
+          <button class="icon-btn" id="trip-modal-close" aria-label="Schliessen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="trip-modal__body">
+          <input type="hidden" id="trip-modal-id" value="" />
+
+          <div class="trip-field">
+            <label class="trip-field__label" for="trip-modal-name">Reisename</label>
+            <input class="trip-field__input" id="trip-modal-name" type="text"
+              placeholder="z.B. Sommerurlaub Kroatien 2025" autocomplete="off" />
+          </div>
+
+          <div class="trip-field">
+            <label class="trip-field__label" for="trip-modal-destination">Zielort</label>
+            <input class="trip-field__input" id="trip-modal-destination" type="text"
+              placeholder="z.B. Split, Kroatien" autocomplete="off" />
+          </div>
+
+          <div class="trip-field__row">
+            <div class="trip-field">
+              <label class="trip-field__label" for="trip-modal-start">Startdatum</label>
+              <input class="trip-field__input" id="trip-modal-start" type="date" />
+            </div>
+            <div class="trip-field">
+              <label class="trip-field__label" for="trip-modal-end">Enddatum</label>
+              <input class="trip-field__input" id="trip-modal-end" type="date" />
+            </div>
+          </div>
+
+          <div class="trip-field">
+            <label class="trip-field__label" for="trip-modal-status">Status</label>
+            <select class="trip-field__select" id="trip-modal-status">
+              <option value="planned">Geplant</option>
+              <option value="active">Aktiv – Ich bin unterwegs</option>
+              <option value="completed">Abgeschlossen</option>
+            </select>
+          </div>
+        </div>
+        <div class="trip-modal__footer">
+          <button class="btn-secondary" id="trip-modal-cancel" style="flex:1;">Abbrechen</button>
+          <button class="btn-primary" id="trip-modal-save" style="flex:2;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Reise speichern
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-overlay" id="settings-overlay" role="dialog"
       aria-modal="true" aria-label="Einstellungen">
       <div class="settings-sheet" id="settings-sheet">
@@ -5027,10 +5172,133 @@
 
 
     // ----------------------------------------------------------------
+    // REISE-VERWALTUNG
+    // ----------------------------------------------------------------
+    let currentTrip = null;
+
+    const STATUS_LABELS = { planned: 'Geplant', active: 'Aktiv', completed: 'Abgeschlossen' };
+    const STATUS_COLORS = { planned: 'var(--c-gold)', active: 'var(--c-online)', completed: 'var(--c-text-muted)' };
+
+    async function loadCurrentTrip() {
+      const trips = await window.GT_DB.getAllTrips();
+      // Aktive Reise bevorzugen, sonst neuste geplante
+      currentTrip =
+        trips.find(t => t.status === 'active') ||
+        trips.filter(t => t.status === 'planned').sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''))[0] ||
+        null;
+
+      const nameEl = document.getElementById('current-trip-name');
+      const metaEl = document.getElementById('current-trip-meta');
+      const noTripEl = document.getElementById('no-trip-state');
+      const dashboardGrid = document.querySelector('.dashboard-grid');
+      const editBtn = document.getElementById('btn-edit-trip');
+
+      if (currentTrip) {
+        nameEl.textContent = currentTrip.name;
+
+        const parts = [];
+        if (currentTrip.destination) parts.push(`
+          <span class="trip-hero__meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${currentTrip.destination}
+          </span>`);
+        if (currentTrip.startDate) parts.push(`
+          <span class="trip-hero__meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${formatDate(currentTrip.startDate)}${currentTrip.endDate ? ' – ' + formatDate(currentTrip.endDate) : ''}
+          </span>`);
+        parts.push(`
+          <span class="trip-hero__meta-item" style="color:${STATUS_COLORS[currentTrip.status] || 'inherit'}">
+            <span class="trip-status-dot" style="background:${STATUS_COLORS[currentTrip.status] || 'currentColor'}"></span>
+            ${STATUS_LABELS[currentTrip.status] || currentTrip.status}
+          </span>`);
+
+        metaEl.innerHTML = parts.join('');
+        if (noTripEl) noTripEl.hidden = true;
+        if (dashboardGrid) dashboardGrid.hidden = false;
+        if (editBtn) editBtn.hidden = false;
+      } else {
+        nameEl.textContent = 'Keine aktive Reise';
+        metaEl.innerHTML = `<span class="trip-hero__meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Reise noch nicht gestartet</span>`;
+        if (noTripEl) noTripEl.hidden = false;
+        if (dashboardGrid) dashboardGrid.hidden = true;
+        if (editBtn) editBtn.hidden = true;
+      }
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-');
+      return `${d}.${m}.${y}`;
+    }
+
+    function openTripModal(trip = null) {
+      document.getElementById('trip-modal-id').value        = trip?.id ?? '';
+      document.getElementById('trip-modal-name').value      = trip?.name ?? '';
+      document.getElementById('trip-modal-destination').value = trip?.destination ?? '';
+      document.getElementById('trip-modal-start').value     = trip?.startDate ?? '';
+      document.getElementById('trip-modal-end').value       = trip?.endDate ?? '';
+      document.getElementById('trip-modal-status').value    = trip?.status ?? 'planned';
+      document.getElementById('trip-modal-title').textContent = trip ? 'Reise bearbeiten' : 'Neue Reise';
+      document.getElementById('trip-modal-overlay').classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('trip-modal-name').focus(), 150);
+    }
+
+    function closeTripModal() {
+      document.getElementById('trip-modal-overlay').classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('trip-modal-close')?.addEventListener('click', closeTripModal);
+    document.getElementById('trip-modal-cancel')?.addEventListener('click', closeTripModal);
+    document.getElementById('trip-modal-overlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeTripModal();
+    });
+
+    document.getElementById('trip-modal-save')?.addEventListener('click', async () => {
+      const name = document.getElementById('trip-modal-name').value.trim();
+      if (!name) {
+        document.getElementById('trip-modal-name').focus();
+        showToast('Bitte einen Reisenamen eingeben.', 'error');
+        return;
+      }
+      const idRaw = document.getElementById('trip-modal-id').value;
+      const trip = {
+        ...(idRaw ? { id: Number(idRaw) } : {}),
+        name,
+        destination: document.getElementById('trip-modal-destination').value.trim(),
+        startDate:   document.getElementById('trip-modal-start').value || null,
+        endDate:     document.getElementById('trip-modal-end').value || null,
+        status:      document.getElementById('trip-modal-status').value,
+      };
+      try {
+        await window.GT_DB.saveTrip(trip);
+        closeTripModal();
+        await loadCurrentTrip();
+        vibrate([20, 10, 40]);
+        showToast(`Reise „${name}" gespeichert.`, 'success');
+      } catch (err) {
+        showToast('Fehler beim Speichern: ' + err.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-new-trip')?.addEventListener('click', () => openTripModal());
+    document.getElementById('btn-edit-trip')?.addEventListener('click', () => openTripModal(currentTrip));
+
+    // Enter in Namensfeld = Speichern
+    document.getElementById('trip-modal-name')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('trip-modal-save')?.click();
+    });
+
+    // ----------------------------------------------------------------
     // INITIALISIERUNG
     // ----------------------------------------------------------------
     async function init() {
       await registerServiceWorker();
+      await loadCurrentTrip();
 
       // Service Worker Nachrichten empfangen
       if ('serviceWorker' in navigator) {
