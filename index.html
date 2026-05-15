@@ -5228,12 +5228,6 @@
       }
     }
 
-    function formatDate(iso) {
-      if (!iso) return '';
-      const [y, m, d] = iso.split('-');
-      return `${d}.${m}.${y}`;
-    }
-
     function openTripModal(trip = null) {
       document.getElementById('trip-modal-id').value        = trip?.id ?? '';
       document.getElementById('trip-modal-name').value      = trip?.name ?? '';
