@@ -4029,16 +4029,12 @@
       },
     };
 
-    // Client-ID zur Laufzeit in GRAPH_CONFIG schreiben
+    // Client-ID zur Laufzeit in GRAPH_CONFIG schreiben (GRAPH_CONFIG muss bereits deklariert sein)
     function applyClientId(id) {
       if (id && id.trim()) {
         GRAPH_CONFIG.clientId = id.trim();
       }
     }
-
-    // Beim Start gespeicherte Client-ID laden
-    const _savedId = AppSettings.get('clientId');
-    if (_savedId) applyClientId(_savedId);
 
     // UUID-Format pruefen
     function isValidUUID(str) {
@@ -4297,13 +4293,17 @@
     // Berechtigungen: Files.Read, User.Read (delegated)
     // ------------------------------------------------------------
     const GRAPH_CONFIG = {
-      clientId:    'DEINE-AZURE-APP-ID',   // <- hier eintragen
+      clientId:    'DEINE-AZURE-APP-ID',
       redirectUri: window.location.origin + window.location.pathname,
       scopes:      ['Files.Read', 'User.Read', 'offline_access'],
       authEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
       tokenEndpoint:'https://login.microsoftonline.com/common/oauth2/v2.0/token',
       graphBase:   'https://graph.microsoft.com/v1.0',
     };
+
+    // Beim Start gespeicherte Client-ID laden (muss nach GRAPH_CONFIG stehen)
+    const _savedId = AppSettings.get('clientId');
+    if (_savedId) applyClientId(_savedId);
 
     // Token-Verwaltung
     const TokenStore = {
