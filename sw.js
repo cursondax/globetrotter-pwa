@@ -16,11 +16,7 @@ const ALL_CACHES = [CACHE_APP_SHELL, CACHE_STATIC, CACHE_TILES, CACHE_DOCS];
 const APP_SHELL_URLS = [
   '/index.html',
   '/manifest.json',
-  '/css/app.css',
-  '/js/app.js',
   '/js/db.js',
-  '/js/router.js',
-  // Leaflet.js via CDN wird separat behandelt
 ];
 
 // Statische Assets (Fonts, Icons, etc.)
@@ -32,7 +28,7 @@ const STATIC_ASSET_PATTERNS = [
 ];
 
 // Leaflet Kacheln (OpenStreetMap)
-const MAP_TILE_PATTERN = /openstreetmap\.org\/tiles/;
+const MAP_TILE_PATTERN = /tile\.openstreetmap\.org/;
 // Maximale Anzahl gecachter Kartenkacheln
 const MAX_TILE_CACHE_ENTRIES = 500;
 
