@@ -5357,8 +5357,17 @@
       if (e.target === e.currentTarget) closeTripModal();
     });
 
+    async function geocodeDestination(query) {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+      const resp = await fetch(url, { headers: { 'Accept-Language': 'de' } });
+      const data = await resp.json();
+      if (!data.length) return null;
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), displayName: data[0].display_name };
+    }
+
     document.getElementById('trip-modal-save')?.addEventListener('click', async () => {
-      const name = document.getElementById('trip-modal-name').value.trim();
+      const name        = document.getElementById('trip-modal-name').value.trim();
+      const destination = document.getElementById('trip-modal-destination').value.trim();
       if (!name) {
         document.getElementById('trip-modal-name').focus();
         showToast('Bitte einen Reisenamen eingeben.', 'error');
@@ -5368,17 +5377,38 @@
       const trip = {
         ...(idRaw ? { id: Number(idRaw) } : {}),
         name,
-        destination: document.getElementById('trip-modal-destination').value.trim(),
-        startDate:   document.getElementById('trip-modal-start').value || null,
-        endDate:     document.getElementById('trip-modal-end').value || null,
-        status:      document.getElementById('trip-modal-status').value,
+        destination,
+        startDate: document.getElementById('trip-modal-start').value || null,
+        endDate:   document.getElementById('trip-modal-end').value || null,
+        status:    document.getElementById('trip-modal-status').value,
       };
       try {
-        await window.GT_DB.saveTrip(trip);
+        const savedId = await window.GT_DB.saveTrip(trip);
+        const tripId  = trip.id ?? savedId;
         closeTripModal();
         await loadCurrentTrip();
         vibrate([20, 10, 40]);
         showToast(`Reise „${name}" gespeichert.`, 'success');
+
+        // Zielort automatisch geocodieren und auf Karte eintragen
+        if (destination) {
+          geocodeDestination(destination).then(async (geo) => {
+            if (!geo) return;
+            const loc = {
+              tripId,
+              name:      destination,
+              country:   geo.displayName.split(',').slice(-1)[0].trim(),
+              lat:       geo.lat,
+              lng:       geo.lng,
+              visitedAt: trip.startDate || new Date().toISOString(),
+              notes:     '',
+            };
+            await window.GT_DB.saveLocation(loc);
+            addMarkerToMap(loc);
+            const countEl = document.getElementById('map-location-count');
+            if (countEl) countEl.textContent = (parseInt(countEl.textContent || '0') + 1).toLocaleString('de-DE');
+          }).catch(() => {}); // Geocoding-Fehler still ignorieren
+        }
       } catch (err) {
         showToast('Fehler beim Speichern: ' + err.message, 'error');
       }
