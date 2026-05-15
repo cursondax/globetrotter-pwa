@@ -1915,6 +1915,35 @@
     .trip-status--done     { background: var(--c-text-muted); }
 
     /* ============================================================
+       ORT-MODAL (Besuchter Ort hinzufügen)
+    ============================================================ */
+    .map-add-btn {
+      position: absolute; bottom: var(--space-5); right: var(--space-5);
+      z-index: 1000; display: flex; align-items: center; gap: var(--space-2);
+      background: var(--c-gold); color: #1a1506;
+      border: none; border-radius: var(--r-full);
+      padding: 10px 18px; font-family: var(--font-body);
+      font-size: var(--fs-sm); font-weight: var(--fw-medium);
+      cursor: pointer; box-shadow: 0 4px 16px rgba(201,168,76,0.4);
+      transition: transform var(--t-fast), box-shadow var(--t-fast);
+    }
+    .map-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,0.5); }
+
+    .loc-coords {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);
+    }
+    .loc-geo-btn {
+      display: flex; align-items: center; gap: var(--space-2);
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      border-radius: var(--r-md); padding: var(--space-3) var(--space-4);
+      font-family: var(--font-body); font-size: var(--fs-xs);
+      color: var(--c-text-muted); cursor: pointer;
+      transition: border-color var(--t-fast), color var(--t-fast);
+      width: 100%;
+    }
+    .loc-geo-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--c-gold); }
+
+    /* ============================================================
        RESPONSIVE: TABLET / DESKTOP
     ============================================================ */
     @media (min-width: 768px) {
@@ -2540,7 +2569,7 @@
       <!-- VIEW: Weltkarte -->
       <section class="view" id="view-weltkarte" data-view="weltkarte" aria-label="Weltkarte aller besuchten Orte">
 
-        <div class="map-container">
+        <div class="map-container" style="position:relative;">
           <div id="leaflet-map" aria-label="Interaktive Weltkarte"></div>
           <div class="map-overlay" id="map-overlay">
             <div class="map-badge">
@@ -2550,6 +2579,12 @@
               <strong id="map-location-count">0</strong> besuchte Orte
             </div>
           </div>
+          <button class="map-add-btn" id="btn-add-location" aria-label="Ort hinzufügen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Ort hinzufügen
+          </button>
         </div>
 
       </section>
@@ -2610,6 +2645,76 @@
     <!-- ======================================================
          EINSTELLUNGS-OVERLAY
     ====================================================== -->
+    <!-- ======================================================
+         ORT-MODAL (Besuchten Ort hinzufügen)
+    ====================================================== -->
+    <div class="trip-modal-overlay" id="loc-modal-overlay" role="dialog"
+      aria-modal="true" aria-label="Ort hinzufügen">
+      <div class="trip-modal">
+        <div class="trip-modal__handle"></div>
+        <div class="trip-modal__header">
+          <span class="trip-modal__title">Besuchten Ort hinzufügen</span>
+          <button class="icon-btn" id="loc-modal-close" aria-label="Schliessen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="trip-modal__body">
+          <div class="trip-field">
+            <label class="trip-field__label" for="loc-name">Ortsname</label>
+            <input class="trip-field__input" id="loc-name" type="text"
+              placeholder="z.B. Dubrovnik Altstadt" autocomplete="off" />
+          </div>
+          <div class="trip-field">
+            <label class="trip-field__label" for="loc-country">Land</label>
+            <input class="trip-field__input" id="loc-country" type="text"
+              placeholder="z.B. Kroatien" autocomplete="off" />
+          </div>
+          <div class="trip-field">
+            <label class="trip-field__label" for="loc-date">Besucht am</label>
+            <input class="trip-field__input" id="loc-date" type="date" />
+          </div>
+          <div class="trip-field">
+            <label class="trip-field__label">Koordinaten</label>
+            <button class="loc-geo-btn" id="loc-geo-btn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <span id="loc-geo-label">Aktuellen Standort verwenden</span>
+            </button>
+            <div class="loc-coords" style="margin-top:var(--space-2);">
+              <div class="trip-field">
+                <label class="trip-field__label" for="loc-lat">Breitengrad</label>
+                <input class="trip-field__input" id="loc-lat" type="number"
+                  step="0.000001" placeholder="48.137154" />
+              </div>
+              <div class="trip-field">
+                <label class="trip-field__label" for="loc-lng">Längengrad</label>
+                <input class="trip-field__input" id="loc-lng" type="number"
+                  step="0.000001" placeholder="11.576124" />
+              </div>
+            </div>
+          </div>
+          <div class="trip-field">
+            <label class="trip-field__label" for="loc-notes">Notiz (optional)</label>
+            <input class="trip-field__input" id="loc-notes" type="text"
+              placeholder="z.B. Absolutes Highlight der Reise" autocomplete="off" />
+          </div>
+        </div>
+        <div class="trip-modal__footer">
+          <button class="btn-secondary" id="loc-modal-cancel" style="flex:1;">Abbrechen</button>
+          <button class="btn-primary" id="loc-modal-save" style="flex:2;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            Ort speichern
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ======================================================
          REISE-MODAL (Erstellen / Bearbeiten)
     ====================================================== -->
@@ -5286,6 +5391,113 @@
     document.getElementById('trip-modal-name')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('trip-modal-save')?.click();
     });
+
+    // ----------------------------------------------------------------
+    // ORT HINZUFÜGEN
+    // ----------------------------------------------------------------
+    function openLocModal() {
+      document.getElementById('loc-name').value    = '';
+      document.getElementById('loc-country').value = '';
+      document.getElementById('loc-date').value    = new Date().toISOString().slice(0, 10);
+      document.getElementById('loc-lat').value     = '';
+      document.getElementById('loc-lng').value     = '';
+      document.getElementById('loc-notes').value   = '';
+      document.getElementById('loc-geo-label').textContent = 'Aktuellen Standort verwenden';
+      document.getElementById('loc-modal-overlay').classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('loc-name').focus(), 150);
+    }
+
+    function closeLocModal() {
+      document.getElementById('loc-modal-overlay').classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('loc-modal-close')?.addEventListener('click', closeLocModal);
+    document.getElementById('loc-modal-cancel')?.addEventListener('click', closeLocModal);
+    document.getElementById('loc-modal-overlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeLocModal();
+    });
+
+    document.getElementById('btn-add-location')?.addEventListener('click', openLocModal);
+
+    document.getElementById('loc-geo-btn')?.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        showToast('Geolocation wird nicht unterstützt.', 'error');
+        return;
+      }
+      const label = document.getElementById('loc-geo-label');
+      label.textContent = 'Standort wird ermittelt…';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('loc-lat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('loc-lng').value = pos.coords.longitude.toFixed(6);
+          label.textContent = 'Standort übernommen';
+          vibrate([10, 5, 20]);
+        },
+        () => {
+          label.textContent = 'Standort nicht verfügbar';
+          showToast('Standortzugriff verweigert oder nicht möglich.', 'error');
+        },
+        { timeout: 8000 }
+      );
+    });
+
+    document.getElementById('loc-modal-save')?.addEventListener('click', async () => {
+      const name = document.getElementById('loc-name').value.trim();
+      const lat  = parseFloat(document.getElementById('loc-lat').value);
+      const lng  = parseFloat(document.getElementById('loc-lng').value);
+
+      if (!name) {
+        document.getElementById('loc-name').focus();
+        showToast('Bitte einen Ortsnamen eingeben.', 'error');
+        return;
+      }
+      if (isNaN(lat) || isNaN(lng)) {
+        showToast('Bitte Koordinaten eingeben oder Standort verwenden.', 'error');
+        return;
+      }
+
+      const loc = {
+        tripId:    currentTrip?.id ?? null,
+        name,
+        country:   document.getElementById('loc-country').value.trim(),
+        lat,
+        lng,
+        visitedAt: document.getElementById('loc-date').value || new Date().toISOString(),
+        notes:     document.getElementById('loc-notes').value.trim(),
+      };
+
+      try {
+        await window.GT_DB.saveLocation(loc);
+        closeLocModal();
+        vibrate([20, 10, 40]);
+        showToast(`„${name}" zur Karte hinzugefügt.`, 'success');
+        addMarkerToMap(loc);
+        const countEl = document.getElementById('map-location-count');
+        if (countEl) countEl.textContent = (parseInt(countEl.textContent) + 1).toLocaleString('de-DE');
+      } catch (err) {
+        showToast('Fehler beim Speichern: ' + err.message, 'error');
+      }
+    });
+
+    function addMarkerToMap(loc) {
+      if (!window._leafletMap || !loc.lat || !loc.lng) return;
+      const goldIcon = L.divIcon({
+        className: '',
+        html: `<div style="width:12px;height:12px;background:${getComputedStyle(document.documentElement).getPropertyValue('--c-gold').trim()};border-radius:50%;box-shadow:0 0 12px rgba(201,168,76,0.6);border:2px solid rgba(255,255,255,0.3);"></div>`,
+        iconSize: [12, 12], iconAnchor: [6, 6],
+      });
+      L.marker([loc.lat, loc.lng], { icon: goldIcon })
+        .addTo(window._leafletMap)
+        .bindPopup(`
+          <strong style="font-family:Cormorant Garamond,serif;font-size:16px;">${loc.name}</strong><br>
+          <small style="color:#8080a0;">${loc.country || ''}${loc.country && loc.visitedAt ? ' · ' : ''}${loc.visitedAt ? new Date(loc.visitedAt).toLocaleDateString('de-DE') : ''}</small>
+          ${loc.notes ? `<p style="margin-top:6px;font-size:13px;">${loc.notes}</p>` : ''}
+        `)
+        .openPopup();
+      window._leafletMap.setView([loc.lat, loc.lng], Math.max(window._leafletMap.getZoom(), 6));
+    }
 
     // ----------------------------------------------------------------
     // INITIALISIERUNG
