@@ -4592,8 +4592,15 @@
     let nextPageToken     = null;
     let archivInitialized = false;
 
+    const ARCHIV_LOGIN_HTML = document.getElementById('archiv-login')?.innerHTML;
+
     function archivShowLogin() {
-      document.getElementById('archiv-login').hidden      = false;
+      const loginDiv = document.getElementById('archiv-login');
+      // Originalen Login-Bereich wiederherstellen falls showOAuthSetupGuide ihn ueberschrieben hat
+      if (loginDiv && !document.getElementById('btn-onedrive-connect')) {
+        loginDiv.innerHTML = ARCHIV_LOGIN_HTML;
+      }
+      if (loginDiv) loginDiv.hidden = false;
       document.getElementById('archiv-connected').hidden  = true;
       document.getElementById('archiv-bildband').hidden   = true;
     }
