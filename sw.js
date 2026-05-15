@@ -4,7 +4,7 @@
  * Network-First fuer API-Calls, Background Sync fuer Offline-Aktionen.
  */
 
-const SW_VERSION = '1.0.0';
+const SW_VERSION = '1.1.0';
 const CACHE_APP_SHELL = `gt-shell-v${SW_VERSION}`;
 const CACHE_STATIC = `gt-static-v${SW_VERSION}`;
 const CACHE_TILES = `gt-tiles-v${SW_VERSION}`;
